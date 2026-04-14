@@ -377,8 +377,16 @@ async function registrarCobro(){
         if (typeof rtdb !== 'undefined') {
           try { const safeId = alumnoEnCaja.id.replace(/[.#$/[\]]/g,'_'); rtdb.ref('notificaciones/' + safeId).push({ tipo:'recibo', folio, monto, detalle, fecha: new Date().toLocaleDateString('es-MX'), metodo }); } catch(e) { console.warn('RTDB notification failed:', e); }
         }
-        const syncResult=await SyncModule.confirmarReservasPendientes(alumnoEnCaja.id,folio);
-        const todosLosDocs={length:syncResult.confirmadas};
+                // ✅ Sincronizar: Confirmar reservas pendientes por pago
+        let confirmadas = 0;
+        try {
+          if (typeof SyncModule !== 'undefined' && SyncModule.confirmarReservasPorPago) {
+            confirmadas = await SyncModule.confirmarReservasPorPago(folio);
+          }
+        } catch(e) {
+          console.warn('Error en SyncModule:', e);
+        }
+        const todosLosDocs={length:confirmadas};
         // Si hay clases desde el carrito de recepción, crear reservas confirmadas directamente
         if (window._cajaPendingClases && window._cajaPendingClases.length) {
           const batch2 = db.batch();
@@ -869,16 +877,42 @@ function iniciarMover(alumnoId,nombre,reservaId){
 function cancelarMover(){alumnoMoverID=null;alumnoMoverReservaID=null;$('moverForm').style.display='none';}
 
 async function ejecutarMover(){
-    const destId=$('selectDestino').value;
-    if(!destId||!alumnoMoverID||!alumnoMoverReservaID){toast('⚠️ Selecciona la clase destino');return;}
-    const dest=clasesCached.find(c=>c.id===destId);
-    if(!dest){toast('❌ Clase no encontrada');return;}
-    if((dest.cupoDisponible??dest.cupo??0)<=0){toast('🔴 Sin lugares en clase destino');return;}
-    try{
-        await SyncModule.moverAlumnoDeClase(alumnoMoverReservaID,claseViendoID,destId,dest);
-        toast('🔄 Movido a '+dest.nombre,4000);cancelarMover();
-        cargarInscritosDiscip(claseViendoID);
-    }catch(e){toast('❌ '+e.message);}
+     const destId=$('selectDestino').value;
+     if(!destId||!alumnoMoverID||!alumnoMoverReservaID){toast('⚠️ Selecciona la clase destino');return;}
+     const dest=clasesCached.find(c=>c.id===destId);
+     if(!dest){toast('❌ Clase no encontrada');return;}
+     if((dest.cupoDisponible??dest.cupo??0)<=0){toast('🔴 Sin lugares en clase destino');return;}
+     try{
+         // ✅ Mover alumno: actualizar reserva y cupos
+         const batch = db.batch();
+         
+         // Actualizar la reserva con nueva clase
+         const reservaRef = db.collection('reservas').doc(alumnoMoverReservaID);
+         batch.update(reservaRef, {
+             claseId: destId,
+             claseNombre: dest.nombre || '',
+             dia: dest.dia || '',
+             hora: dest.inicio || '',
+             horaFin: dest.fin || '',
+             profesor: dest.profesor || ''
+         });
+         
+         // Restaurar cupo a clase anterior
+         batch.update(db.collection('catalogo').doc(claseViendoID), {
+             cupoDisponible: firebase.firestore.FieldValue.increment(1)
+         });
+         
+         // Restar cupo a clase nueva
+         batch.update(db.collection('catalogo').doc(destId), {
+             cupoDisponible: firebase.firestore.FieldValue.increment(-1)
+         });
+         
+         await batch.commit();
+         
+         toast('🔄 Movido a '+dest.nombre,4000);
+         cancelarMover();
+         cargarInscritosDiscip(claseViendoID);
+     }catch(e){toast('❌ '+e.message);}
 }
 
 async function quitarDeClase(reservaId,claseId){
@@ -898,7 +932,7 @@ async function quitarDeClase(reservaId,claseId){
         if(!confirm('¿Quitar al alumno de esta clase?'))return;
     }
     try{
-        const resultado=await SyncModule.quitarAlumnoDeClase(reservaId,claseId,{eliminarTodoElPlan});
+        const resultado=await SyncModule.quitarAlumnoDeClase(reservaId,claseId);
         toast('🗑️ '+(resultado.eliminadas>1?resultado.eliminadas+' sesiones eliminadas':'Alumno removido'));
         cargarInscritosDiscip(claseId);
     }catch(e){toast('❌ '+e.message);}
