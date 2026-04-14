@@ -1,292 +1,291 @@
-/**
- * sync.js — Módulo central de sincronización entre portales
- *
- * Centraliza la lógica compartida de pagos, reservas y cupos para los portales
- * de alumno (alumno.js) y recepción (recepcion.js).
- *
- * Requiere: `db` (Firestore) y `firebase` disponibles en el contexto global.
- * Expone: window.SyncModule
- */
-(function () {
-  'use strict';
+// ════════════════════════════════════════════════════════════════
+// SYNC MODULE — Sincronización entre portales
+// ════════════════════════════════════════════════════════════════
 
+const SyncModule = {
+  
   /**
-   * Valida que db esté disponible antes de ejecutar operaciones.
-   * @throws {Error} Si db no está inicializado.
+   * Descontar una clase cuando el alumno asiste
+   * Se ejecuta cuando: profesor marca presente, o clase termina sin falta
    */
-  function _requireDb() {
-    if (typeof db === 'undefined' || !db) {
-      throw new Error('Firestore (db) no está disponible. Verifica firebase-init.js.');
-    }
-  }
-
-  /**
-   * Confirma todas las reservas pendientes de un alumno.
-   *
-   * Estrategia:
-   *  1. Busca reservas con `alumnoId` + `folio` exacto en estados 'pre-reserva' y 'pendiente_pago'.
-   *  2. Si no encuentra nada (folio de recepción ≠ folio generado por el alumno en plan semanal),
-   *     busca solo por `alumnoId` + estado, sin filtro de folio.
-   *  3. Actualiza todas las reservas encontradas a estado 'confirmada' y sincroniza su folio al
-   *     folio de recepción para mantener consistencia en el historial.
-   *
-   * @param {string} alumnoId - ID del alumno en Firestore.
-   * @param {string} folioRecepcion - Folio generado por recepción al momento del cobro.
-   * @returns {Promise<{confirmadas: number, folioAlumno: string|null}>}
-   */
-  async function confirmarReservasPendientes(alumnoId, folioRecepcion) {
-    _requireDb();
+  async descontarClaseAlumno(reservaId, alumnoId) {
     try {
-      const col = db.collection('reservas');
-      const fechaConfirmacion = new Date().toLocaleDateString('es-MX');
-
-      // --- Intento 1: búsqueda exacta por folio ---
-      const [s1, s2] = await Promise.all([
-        col.where('alumnoId', '==', alumnoId).where('folio', '==', folioRecepcion).where('estado', '==', 'pre-reserva').get(),
-        col.where('alumnoId', '==', alumnoId).where('folio', '==', folioRecepcion).where('estado', '==', 'pendiente_pago').get()
-      ]);
-      let docs = [...s1.docs, ...s2.docs];
-
-      let folioAlumno = folioRecepcion;
-
-      // --- Intento 2: búsqueda solo por alumnoId si no se encontró nada ---
-      if (docs.length === 0) {
-        const [s3, s4] = await Promise.all([
-          col.where('alumnoId', '==', alumnoId).where('estado', '==', 'pre-reserva').get(),
-          col.where('alumnoId', '==', alumnoId).where('estado', '==', 'pendiente_pago').get()
-        ]);
-        docs = [...s3.docs, ...s4.docs];
-
-        // Registrar el folio original del alumno (para devolverlo al llamador)
-        if (docs.length > 0 && docs[0].data().folio) {
-          folioAlumno = docs[0].data().folio;
-        }
-      }
-
-      if (docs.length === 0) {
-        return { confirmadas: 0, folioAlumno: null };
-      }
-
-      // Confirmar todas las reservas encontradas y alinear su folio al de recepción
-      await Promise.all(
-        docs.map(d =>
-          db.collection('reservas').doc(d.id).update({
-            estado: 'confirmada',
-            alertaMostrada: false,
-            fechaConfirmacion,
-            folio: folioRecepcion
-          })
-        )
-      );
-
-      return { confirmadas: docs.length, folioAlumno };
-    } catch (e) {
-      console.error('[SyncModule] confirmarReservasPendientes error for alumno:', alumnoId, 'folio:', folioRecepcion, e);
-      throw e;
-    }
-  }
-
-  /**
-   * Mueve a un alumno de una clase origen a una clase destino.
-   *
-   * Lee la reserva original para preservar TODOS los campos del plan semanal,
-   * luego en un batch atómico:
-   *  - Borra la reserva original.
-   *  - Crea la nueva reserva en el destino (heredando los campos del plan semanal).
-   *  - Actualiza cupoDisponible en origen (+1) y destino (-1).
-   *  - Si es planSemanal, recalcula el slotKey con el nuevo claseId/dia/hora.
-   *
-   * @param {string} reservaId - ID de la reserva a mover.
-   * @param {string} origenClaseId - ID de la clase origen.
-   * @param {string} destinoClaseId - ID de la clase destino.
-   * @param {Object} destinoClaseData - Datos de la clase destino (nombre, area, dia, hora, horaFin, profesor, etc.)
-   * @returns {Promise<{ok: boolean, nuevaReservaId: string}>}
-   */
-  async function moverAlumnoDeClase(reservaId, origenClaseId, destinoClaseId, destinoClaseData) {
-    _requireDb();
-    try {
-      // Leer la reserva original para obtener TODOS sus campos
-      const reservaSnap = await db.collection('reservas').doc(reservaId).get();
+      const reservaRef = db.collection('reservas').doc(reservaId);
+      const reservaSnap = await reservaRef.get();
+      
       if (!reservaSnap.exists) {
-        throw new Error('La reserva indicada no existe.');
+        console.error('Reserva no encontrada:', reservaId);
+        return false;
       }
+      
       const reservaData = reservaSnap.data();
-
-      // Construir la nueva reserva: base = todos los campos del original
-      const nuevaReserva = Object.assign({}, reservaData, {
-        claseId: destinoClaseId,
-        claseNombre: destinoClaseData.nombre || destinoClaseData.claseNombre || '',
-        area: destinoClaseData.area || '',
-        estado: 'confirmada',
-        alertaMostrada: true,
-        timestamp: Date.now()
-      });
-
-      // Sobrescribir campos de horario si el destino los provee
-      if (destinoClaseData.dia)     nuevaReserva.dia     = destinoClaseData.dia;
-      if (destinoClaseData.hora)    nuevaReserva.hora    = destinoClaseData.hora;
-      if (destinoClaseData.horaFin) nuevaReserva.horaFin = destinoClaseData.horaFin;
-      if (destinoClaseData.profesor) nuevaReserva.profesor = destinoClaseData.profesor;
-
-      // Si es plan semanal, recalcular el slotKey con los nuevos datos
-      if (reservaData.planSemanal && reservaData.alumnoId) {
-        const dia   = nuevaReserva.dia  || reservaData.dia  || '';
-        const hora  = nuevaReserva.hora || reservaData.hora || '';
-        nuevaReserva.slotKey = reservaData.alumnoId + '_' + destinoClaseId + '_' + dia + '_' + hora;
+      const pasesActuales = reservaData.pasesRestantes || 0;
+      
+      // Solo descontar si hay pases disponibles
+      if (pasesActuales > 0) {
+        // 1. Descontar pase en la reserva específica
+        await reservaRef.update({
+          pasesRestantes: firebase.firestore.FieldValue.increment(-1),
+          ultimoDesconteFecha: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        // 2. Descontar del total de clases del alumno
+        const alumnoRef = db.collection('alumnos').doc(alumnoId);
+        const alumnoSnap = await alumnoRef.get();
+        
+        if (alumnoSnap.exists) {
+          const alumnoData = alumnoSnap.data();
+          const clasesRestantes = alumnoData.clasesRestantes || 0;
+          
+          if (clasesRestantes > 0) {
+            await alumnoRef.update({
+              clasesRestantes: firebase.firestore.FieldValue.increment(-1),
+              ultimoDesconteFecha: firebase.firestore.FieldValue.serverTimestamp()
+            });
+          }
+        }
+        
+        console.log(`✅ Clase descontada para ${alumnoId}. Pases restantes: ${pasesActuales - 1}`);
+        return true;
       }
-
-      const batch = db.batch();
-
-      // Liberar cupo en origen
-      batch.update(db.collection('catalogo').doc(origenClaseId), {
-        cupoDisponible: firebase.firestore.FieldValue.increment(1)
-      });
-
-      // Borrar reserva original
-      batch.delete(db.collection('reservas').doc(reservaId));
-
-      // Crear nueva reserva en destino
-      const nuevaRef = db.collection('reservas').doc();
-      batch.set(nuevaRef, nuevaReserva);
-
-      // Decrementar cupo en destino
-      batch.update(db.collection('catalogo').doc(destinoClaseId), {
-        cupoDisponible: firebase.firestore.FieldValue.increment(-1)
-      });
-
-      await batch.commit();
-
-      return { ok: true, nuevaReservaId: nuevaRef.id };
+      
+      console.warn('No hay pases restantes para descontar');
+      return false;
     } catch (e) {
-      console.error('[SyncModule] moverAlumnoDeClase error moving reservation:', reservaId, 'from:', origenClaseId, 'to:', destinoClaseId, e);
-      throw e;
+      console.error('Error al descontar clase:', e);
+      return false;
     }
-  }
-
+  },
+  
   /**
-   * Quita a un alumno de una clase.
-   *
-   * - `eliminarTodoElPlan: false` (default): borra solo la reserva indicada y libera 1 cupo.
-   * - `eliminarTodoElPlan: true`: lee el slotKey de la reserva, busca TODAS las reservas
-   *   con ese slotKey del mismo alumno, las borra en batch y libera N cupos.
-   *
-   * @param {string} reservaId - ID de la reserva a eliminar.
-   * @param {string} claseId - ID de la clase de la que se quita al alumno.
-   * @param {{ eliminarTodoElPlan?: boolean }} [opciones={}]
-   * @returns {Promise<{eliminadas: number}>}
+   * Marcar asistencia y descontar automáticamente
+   * Se ejecuta desde el portal de profesores
    */
-  async function quitarAlumnoDeClase(reservaId, claseId, opciones) {
-    _requireDb();
-    opciones = opciones || {};
+  async marcarAsistenciaYDescontar(claseId, alumnoId, tipo = 'presente') {
     try {
-      if (opciones.eliminarTodoElPlan) {
-        // Leer la reserva para obtener el slotKey
-        const reservaSnap = await db.collection('reservas').doc(reservaId).get();
-        if (!reservaSnap.exists) {
-          throw new Error('La reserva indicada no existe.');
-        }
-        const reservaData = reservaSnap.data();
-        const sk = reservaData.slotKey;
-        const alumnoId = reservaData.alumnoId;
-
-        if (!sk || !alumnoId) {
-          // No hay slotKey — degradar a eliminación individual
-          await db.collection('catalogo').doc(claseId).update({
-            cupoDisponible: firebase.firestore.FieldValue.increment(1)
-          });
-          await db.collection('reservas').doc(reservaId).delete();
-          return { eliminadas: 1 };
-        }
-
-        // Buscar todas las reservas del mismo slotKey
-        const snapSlot = await db.collection('reservas')
-          .where('alumnoId', '==', alumnoId)
-          .where('slotKey', '==', sk)
-          .get();
-
-        if (snapSlot.empty) {
-          // Fallback: eliminar solo la indicada
-          await db.collection('catalogo').doc(claseId).update({
-            cupoDisponible: firebase.firestore.FieldValue.increment(1)
-          });
-          await db.collection('reservas').doc(reservaId).delete();
-          return { eliminadas: 1 };
-        }
-
-        const n = snapSlot.size;
-        const batch = db.batch();
-
-        // Borrar todas las reservas del slot
-        snapSlot.docs.forEach(d => batch.delete(d.ref));
-
-        // Restaurar cupos agrupando por claseId, ya que un plan semanal puede
-        // tener sesiones en múltiples clases distintas.
-        const cuposPorClase = {};
-        snapSlot.docs.forEach(d => {
-          const cid = d.data().claseId;
-          cuposPorClase[cid] = (cuposPorClase[cid] || 0) + 1;
-        });
-        Object.entries(cuposPorClase).forEach(([cid, count]) => {
-          batch.update(db.collection('catalogo').doc(cid), {
-            cupoDisponible: firebase.firestore.FieldValue.increment(count)
-          });
-        });
-
-        await batch.commit();
-        return { eliminadas: n };
+      // 1. Registrar en colección asistencias
+      const hoy = new Date();
+      const fechaStr = hoy.toISOString().split('T')[0];
+      const asistenciaRef = db.collection('asistencias').doc(`${alumnoId}_${claseId}_${fechaStr}`);
+      
+      const asistenciaData = {
+        alumnoId,
+        claseId,
+        fecha: firebase.firestore.Timestamp.fromDate(hoy),
+        fechaStr,
+        tipo, // 'presente', 'ausente', 'tarde', 'justificado'
+        registradoPor: 'profesor',
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      
+      await asistenciaRef.set(asistenciaData, { merge: true });
+      
+      // 2. Buscar la reserva del alumno para esta clase
+      const reservasSnap = await db.collection('reservas')
+        .where('alumnoId', '==', alumnoId)
+        .where('claseId', '==', claseId)
+        .where('estado', '==', 'confirmada')
+        .limit(1)
+        .get();
+      
+      if (!reservasSnap.empty) {
+        const reservaDoc = reservasSnap.docs[0];
+        const reservaRef = reservaDoc.ref;
+        
+        // 3. Actualizar reserva con tipo de asistencia
+        const updateData = {
+          [tipo]: true, // 'presente': true, 'ausente': true, etc.
+          asistenciaRegistrada: true,
+          asistenciaFecha: firebase.firestore.Timestamp.fromDate(hoy)
+        };
+        
+        await reservaRef.update(updateData);
+        
+        // 4. Descontar clase (siempre, incluso si es ausente/tarde)
+        await this.descontarClaseAlumno(reservaDoc.id, alumnoId);
+        
+        console.log(`✅ Asistencia marcada (${tipo}) para ${alumnoId}`);
+        return { success: true, reservaId: reservaDoc.id };
       } else {
-        // Modo individual: eliminar solo la reserva indicada
-        await db.collection('catalogo').doc(claseId).update({
-          cupoDisponible: firebase.firestore.FieldValue.increment(1)
-        });
-        await db.collection('reservas').doc(reservaId).delete();
-        return { eliminadas: 1 };
+        console.warn('No se encontró reserva confirmada para este alumno en esta clase');
+        return { success: false, error: 'Sin reserva confirmada' };
       }
     } catch (e) {
-      console.error('[SyncModule] quitarAlumnoDeClase error for reservation:', reservaId, 'class:', claseId, e);
-      throw e;
+      console.error('Error al marcar asistencia:', e);
+      return { success: false, error: e.message };
     }
-  }
-
+  },
+  
   /**
-   * Recalcula el cupoDisponible de una clase a partir de las reservas confirmadas reales.
-   * Útil para corrección de cupos desincronizados.
-   *
-   * @param {string} claseId - ID de la clase en la colección `catalogo`.
-   * @returns {Promise<{cupoAntes: number, cupoAhora: number}>}
+   * Descontar clase automáticamente cuando termina sin ser marcada
+   * Se ejecuta cada cierto tiempo o al terminar la clase
    */
-  async function sincronizarCupo(claseId) {
-    _requireDb();
+  async descontarClasesTerminadas() {
     try {
-      const [claseSnap, reservasSnap] = await Promise.all([
-        db.collection('catalogo').doc(claseId).get(),
-        db.collection('reservas').where('claseId', '==', claseId).where('estado', '==', 'confirmada').get()
-      ]);
-
-      if (!claseSnap.exists) {
-        throw new Error('Clase no encontrada: ' + claseId);
+      const ahora = new Date();
+      
+      // Buscar reservas confirmadas donde la hora de fin ya pasó
+      const reservasSnap = await db.collection('reservas')
+        .where('estado', '==', 'confirmada')
+        .where('endAt', '<=', firebase.firestore.Timestamp.fromDate(ahora))
+        .get();
+      
+      let descuentosRealizados = 0;
+      
+      for (const doc of reservasSnap.docs) {
+        const reserva = doc.data();
+        
+        // Solo descontar si NO tiene asistencia registrada aún
+        if (!reserva.asistencia && !reserva.ausencia && !reserva.falta) {
+          // Marcar como falta automática
+          await db.collection('reservas').doc(doc.id).update({
+            falta: true,
+            automatico: true,
+            faltaRegistradaAutomaticamente: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          
+          // Descontar clase
+          await this.descontarClaseAlumno(doc.id, reserva.alumnoId);
+          descuentosRealizados++;
+        }
       }
-
-      const claseData = claseSnap.data();
-      const cupoTotal  = claseData.cupo ?? 0;
-      const cupoAntes  = claseData.cupoDisponible ?? cupoTotal;
-      const confirmadas = reservasSnap.size;
-      const cupoAhora  = Math.max(0, cupoTotal - confirmadas);
-
-      await db.collection('catalogo').doc(claseId).update({ cupoDisponible: cupoAhora });
-
-      return { cupoAntes, cupoAhora };
+      
+      if (descuentosRealizados > 0) {
+        console.log(`✅ Se descontaron ${descuentosRealizados} clases por cierre automático`);
+      }
+      
     } catch (e) {
-      console.error('[SyncModule] sincronizarCupo error for class:', claseId, e);
+      console.error('Error al descontar clases terminadas:', e);
+    }
+  },
+  
+  /**
+   * Quitar alumno de una clase (cancelar reserva)
+   * Restaura los pases
+   */
+  async quitarAlumnoDeClase(reservaId, claseId) {
+    try {
+      const reservaRef = db.collection('reservas').doc(reservaId);
+      const reservaSnap = await reservaRef.get();
+      
+      if (!reservaSnap.exists) {
+        throw new Error('Reserva no encontrada');
+      }
+      
+      const reservaData = reservaSnap.data();
+      const alumnoId = reservaData.alumnoId;
+      const pasesRestantes = reservaData.pasesRestantes || 0;
+      const pasesTotal = reservaData.pasesTotal || 1;
+      
+      // 1. Marcar como cancelada
+      await reservaRef.update({
+        estado: 'cancelada',
+        canceladaEn: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      
+      // 2. Restaurar pases al alumno (si no fueron usados)
+      if (pasesRestantes > 0) {
+        await db.collection('alumnos').doc(alumnoId).update({
+          clasesRestantes: firebase.firestore.FieldValue.increment(pasesRestantes),
+          ultimaCancelacionFecha: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+      
+      // 3. Restaurar cupo a la clase
+      await db.collection('catalogo').doc(claseId).update({
+        cupoDisponible: firebase.firestore.FieldValue.increment(1)
+      }).catch(() => {
+        // Si la clase no existe, simplemente continuar
+      });
+      
+      console.log(`✅ Alumno quitado de clase. Pases restaurados: ${pasesRestantes}`);
+      return { success: true, pasesRestaurados: pasesRestantes };
+      
+    } catch (e) {
+      console.error('Error al quitar alumno de clase:', e);
       throw e;
     }
+  },
+  
+  /**
+   * Obtener estado de pases de un alumno
+   */
+  async obtenerPasesAlumno(alumnoId) {
+    try {
+      const alumnoSnap = await db.collection('alumnos').doc(alumnoId).get();
+      
+      if (!alumnoSnap.exists) {
+        return null;
+      }
+      
+      const datos = alumnoSnap.data();
+      return {
+        clasesRestantes: datos.clasesRestantes || 0,
+        clasesPaquete: datos.clasesPaquete || 0,
+        porciento: (datos.clasesRestantes / (datos.clasesPaquete || 1)) * 100
+      };
+    } catch (e) {
+      console.error('Error al obtener pases:', e);
+      return null;
+    }
+  },
+  
+  /**
+   * Inicializar sincronización periódica (ejecutar cada X minutos)
+   */
+  iniciarSincronizacion(intervaloMinutos = 5) {
+    console.log(`⏲️ Sincronización iniciada cada ${intervaloMinutos} minutos`);
+    
+    // Ejecutar inmediatamente
+    this.descontarClasesTerminadas();
+    
+    // Repetir periódicamente
+    setInterval(() => {
+      this.descontarClasesTerminadas();
+    }, intervaloMinutos * 60 * 1000);
+  },
+  
+  /**
+   * Actualizar estado de reserva después de pago
+   */
+  async confirmarReservasPorPago(folio) {
+    try {
+      const reservasSnap = await db.collection('reservas')
+        .where('folio', '==', folio)
+        .where('estado', '==', 'pendiente_pago')
+        .get();
+      
+      let confirmadas = 0;
+      
+      for (const doc of reservasSnap.docs) {
+        await doc.ref.update({
+          estado: 'confirmada',
+          confirmadaEn: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        confirmadas++;
+      }
+      
+      console.log(`✅ ${confirmadas} reservas confirmadas por pago`);
+      return confirmadas;
+      
+    } catch (e) {
+      console.error('Error al confirmar reservas:', e);
+      return 0;
+    }
   }
+};
 
-  // ── Exponer como módulo global ──────────────────────────────────
-  window.SyncModule = {
-    confirmarReservasPendientes,
-    moverAlumnoDeClase,
-    quitarAlumnoDeClase,
-    sincronizarCupo
-  };
-})();
+// Iniciar sincronización cuando la app carga
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    // Solo iniciar si estamos en el portal de recepción o profesores
+    if (document.getElementById('view-caja') || document.getElementById('view-dashboard')) {
+      SyncModule.iniciarSincronizacion(5); // Cada 5 minutos
+    }
+  });
+} else {
+  // Si el DOM ya cargó
+  if (document.getElementById('view-caja') || document.getElementById('view-dashboard')) {
+    SyncModule.iniciarSincronizacion(5);
+  }
+}
