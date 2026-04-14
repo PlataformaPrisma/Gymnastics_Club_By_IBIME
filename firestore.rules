@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/usuarios_staff/$(request.auth.uid));
+    }
+
+    function getStaffRole() {
+      return get(/databases/$(database)/documents/usuarios_staff/$(request.auth.uid)).data.rol;
+    }
+
+    function isAdmin() {
+      return isStaff() && getStaffRole() == 'admin';
+    }
+
+    function isRecepcionOrAdmin() {
+      return isStaff() && (getStaffRole() == 'recepcion' || getStaffRole() == 'admin');
+    }
+
+    // Alumnos
+    match /alumnos/{alumnoId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.authUID || isStaff());
+      allow write: if isRecepcionOrAdmin();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.authUID;
+    }
+
+    // Catálogo de clases
+    match /catalogo/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Reservas
+    match /reservas/{docId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.authUID || isStaff());
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (request.auth.uid == resource.data.authUID || isStaff());
+      allow delete: if isAuthenticated() && (request.auth.uid == resource.data.authUID || isStaff());
+    }
+
+    // Pagos
+    match /pagos/{docId} {
+      allow read: if isStaff();
+      allow write: if isRecepcionOrAdmin();
+    }
+
+    // Config (precios públicos, escritura solo admin)
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Staff interno
+    match /usuarios_staff/{uid} {
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // Profesores
+    match /profesores/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Asistencias
+    match /asistencias/{docId} {
+      allow read: if isStaff();
+      allow write: if isAuthenticated();
+    }
+
+    // Comentarios de clases
+    match /comentarios_clases/{docId} {
+      allow read: if isStaff();
+      allow write: if isAuthenticated();
+    }
+  }
+}

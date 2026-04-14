@@ -1,0 +1,151 @@
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--azul:#1e3a6e;--azul2:#264971;--rojo:#c8382a;--bg:#f0f4fa;--sidebar:#0c1828;--border:#e2e8f0;--txt:#1a2540;--txt2:#64748b}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--txt);margin:0;display:flex;min-height:100vh}
+/* ── SIDEBAR ── */
+  #sidebar{width:220px;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:50;padding:1.2rem}
+.sb-logo{display:flex;align-items:center;gap:.7rem;padding-bottom:1.2rem;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:1rem}
+.sb-logo img{height:36px;width:auto;filter:brightness(0) invert(1)}
+.sb-nav{display:flex;flex-direction:column;gap:3px;flex:1}
+.sb-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .8rem;border-radius:10px;color:rgba(255,255,255,.5);font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;border:none;background:none;font-family:'Outfit';transition:all .2s;width:100%;text-align:left}
+.sb-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.9)}
+.sb-item.on{background:rgba(255,255,255,.12);color:white}
+.sb-item.on.rojo{background:var(--rojo);color:white}
+.sb-item i{width:16px;text-align:center;font-size:.8rem}
+.sb-clock{font-size:.65rem;font-weight:800;color:rgba(255,255,255,.3);text-align:center;padding-top:1rem;border-top:1px solid rgba(255,255,255,.07)}
+
+/* ── MAIN ── */
+#main{margin-left:220px;flex:1;padding:1.5rem;overflow-y:auto;min-height:100vh}
+.view{display:none}.view.on{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:1.2rem;right:1.2rem;z-index:999;background:#1a2540;color:white;padding:.6rem 1.1rem;border-radius:12px;font-size:.72rem;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.3);transition:transform .3s,opacity .3s;transform:translateY(-16px);opacity:0}
+#toast.on{transform:translateY(0);opacity:1}
+
+/* ── CARDS ── */
+.card{background:white;border-radius:14px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stat-card{background:white;border-radius:14px;border:1px solid var(--border);padding:1.1rem 1.2rem;position:relative;overflow:hidden}
+.stat-card .accent{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:14px 0 0 14px}
+.stat-val{font-size:1.8rem;font-weight:900;line-height:1;margin-top:.2rem}
+.stat-lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--txt2)}
+.page-title{font-size:1.5rem;font-weight:900;letter-spacing:.02em;margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem}
+.page-title span{color:var(--rojo)}
+.section-lbl{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--txt2);margin-bottom:.7rem}
+.inp{width:100%;padding:.65rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'Outfit';font-size:.83rem;font-weight:600;outline:none;transition:all .2s;background:white}
+.inp:focus{border-color:var(--azul);box-shadow:0 0 0 3px rgba(30,58,110,.08)}
+.lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:var(--txt2);display:block;margin-bottom:.3rem}
+.btn{padding:.65rem 1.1rem;border:none;border-radius:10px;font-family:'Outfit';font-weight:800;font-size:.75rem;text-transform:uppercase;letter-spacing:.07em;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+.btn-azul{background:var(--azul);color:white}.btn-azul:hover{background:var(--azul2);transform:translateY(-1px)}
+.btn-rojo{background:var(--rojo);color:white}.btn-rojo:hover{filter:brightness(1.1)}
+.btn-ghost{background:#f1f5f9;color:var(--txt2)}.btn-ghost:hover{background:#e2e8f0}
+.badge{font-size:.58rem;font-weight:800;padding:2px 7px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em}
+.badge-green{background:#dcfce7;color:#166534}.badge-amber{background:#fef9c3;color:#92400e}.badge-red{background:#fee2e2;color:#991b1b}.badge-blue{background:#dbeafe;color:#1e40af}
+.tab-bar{display:flex;background:#f1f5f9;border-radius:10px;padding:3px;gap:3px}
+.tab-btn{flex:1;padding:.45rem;border-radius:8px;border:none;font-family:'Outfit';font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;cursor:pointer;color:var(--txt2);background:none;transition:all .2s}
+.tab-btn.on{background:var(--azul);color:white}
+
+/* ── CLASES ADMIN — DISCIPLINA CARDS ── */
+.discip-card{background:white;border-radius:16px;border:2px solid var(--border);padding:1.1rem;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.discip-card:hover{border-color:#94a3b8;transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08)}
+.discip-card.sel{border-color:var(--azul);box-shadow:0 4px 16px rgba(30,58,110,.15)}
+.discip-card.fitness.sel{border-color:var(--rojo);box-shadow:0 4px 16px rgba(200,56,42,.15)}
+.discip-card .dc-icon{font-size:2rem;margin-bottom:.5rem;display:block}
+.discip-card .dc-name{font-weight:900;font-size:.88rem;text-transform:uppercase;letter-spacing:.03em;margin-bottom:.2rem}
+.discip-card .dc-sub{font-size:.62rem;font-weight:600;color:var(--txt2)}
+.discip-card .dc-badge{position:absolute;top:.6rem;right:.6rem}
+.dc-ocupacion{margin-top:.7rem;height:4px;background:#e2e8f0;border-radius:99px;overflow:hidden}
+.dc-ocupacion-fill{height:100%;border-radius:99px;transition:width .4s ease}
+
+/* ── PANEL BOTONES ── */
+.pbtn{flex:1;padding:.45rem .3rem;border-radius:8px;border:1.5px solid var(--border);background:white;font-family:'Outfit';font-size:.65rem;font-weight:800;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.3rem;transition:all .2s;color:var(--txt2)}
+.pbtn:hover{border-color:#94a3b8;background:#f8fafc}
+.pbtn.on{background:var(--azul);color:white;border-color:var(--azul)}
+
+/* ── ALUMNO CARD EN CLASE ── */
+.alumno-en-clase{display:flex;align-items:center;justify-content:space-between;padding:.75rem 1rem;border-radius:12px;border:1px solid var(--border);background:white;transition:all .2s}
+.alumno-en-clase:hover{border-color:#94a3b8;background:#fafbff}
+.ac-avatar{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--azul),var(--azul2));color:white;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.9rem;flex-shrink:0}
+.ac-info p{font-weight:800;font-size:.78rem;text-transform:uppercase}
+.ac-info span{font-size:.6rem;font-weight:600;color:var(--txt2);font-family:monospace}
+
+/* ── ALUMNO VIEW POR ALUMNO ── */
+.alumno-clases-card{background:white;border-radius:14px;border:1px solid var(--border);padding:1rem;margin-bottom:.5rem}
+.ac-clase-pill{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:8px;font-size:.65rem;font-weight:800;margin:.15rem;text-transform:uppercase}
+
+/* ── CREDENCIAL ── */
+#credPreview{background:linear-gradient(135deg,#0c1828,var(--azul) 60%,var(--azul2));color:white;border-radius:14px;padding:1.1rem;width:100%}
+
+/* ── HAMBURGER BUTTON ── */
+#hamburger{display:none;position:fixed;top:.85rem;left:.85rem;z-index:200;background:var(--sidebar);color:white;border:none;border-radius:10px;width:40px;height:40px;font-size:1.2rem;cursor:pointer}
+#sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:90}
+#sidebar-overlay.on{display:block}
+
+/* ── RESPONSIVE GRID CLASSES ── */
+.grid-5-col{display:grid;grid-template-columns:repeat(5,1fr);gap:.75rem;margin-bottom:1.2rem}
+.grid-4-col{display:grid;grid-template-columns:repeat(4,1fr);gap:.75rem;margin-bottom:1.5rem}
+.grid-3-col{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:.7rem}
+.grid-3-col-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.2rem}
+.grid-2-col{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.grid-2-col-sm{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+.grid-4-pre{display:grid;grid-template-columns:repeat(4,1fr);gap:.6rem}
+.grid-registro{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.grid-form-2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem}
+.grid-caja{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+.grid-catalogo{display:grid;grid-template-columns:1fr 2fr;gap:1.2rem}
+.grid-alumnos{display:grid;grid-template-columns:300px 1fr;gap:1.2rem}
+.grid-clases-main{display:grid;grid-template-columns:1fr 420px;gap:1.2rem;align-items:start}
+.grid-ingresos-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin-bottom:1.2rem}
+.grid-2-btn{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+.grid-clase-form{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+.grid-caja-sub{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.grid-ingreso-sub{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem}
+
+/* ── TABLET MEDIA QUERY (769px - 1024px) ── */
+@media (min-width:769px) and (max-width:1024px){
+  #hamburger{display:flex;align-items:center;justify-content:center}
+  #sidebar{transform:translateX(-220px);transition:transform .3s ease}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0;padding:1.2rem;padding-top:3.5rem}
+  .grid-5-col{grid-template-columns:repeat(3,1fr)}
+  .grid-4-col{grid-template-columns:repeat(2,1fr)}
+  .grid-3-col{grid-template-columns:repeat(2,1fr)}
+  .grid-4-pre{grid-template-columns:repeat(3,1fr)}
+  .grid-alumnos{grid-template-columns:1fr}
+  .grid-clases-main{grid-template-columns:1fr}
+  .grid-catalogo{grid-template-columns:1fr}
+}
+
+/* ── MOBILE MEDIA QUERY (≤768px) ── */
+@media (max-width:768px){
+  #hamburger{display:flex;align-items:center;justify-content:center}
+  #sidebar{transform:translateX(-220px);transition:transform .3s ease}
+  #sidebar.open{transform:translateX(0)}
+  #main{margin-left:0;padding:1rem;padding-top:3.5rem}
+  .grid-5-col{grid-template-columns:repeat(2,1fr)}
+  .grid-4-col{grid-template-columns:repeat(2,1fr)}
+  .grid-3-col{grid-template-columns:1fr}
+  .grid-3-col-stats{grid-template-columns:1fr}
+  .grid-2-col{grid-template-columns:1fr}
+  .grid-2-col-sm{grid-template-columns:1fr}
+  .grid-4-pre{grid-template-columns:repeat(2,1fr)}
+  .grid-registro{grid-template-columns:1fr}
+  .grid-form-2{grid-template-columns:1fr}
+  .grid-caja{grid-template-columns:1fr}
+  .grid-catalogo{grid-template-columns:1fr}
+  .grid-alumnos{grid-template-columns:1fr}
+  .grid-clases-main{grid-template-columns:1fr}
+  .grid-ingresos-stats{grid-template-columns:1fr}
+  .grid-2-btn{grid-template-columns:1fr}
+  .grid-clase-form{grid-template-columns:1fr}
+  .grid-caja-sub{grid-template-columns:1fr}
+  .grid-ingreso-sub{grid-template-columns:1fr}
+  .stat-val{font-size:1.4rem}
+  .page-title{font-size:1.2rem}
+  input, select, textarea { font-size: 16px !important; }
+  .btn { min-height: 44px; touch-action: manipulation; }
+  body { overflow-x: hidden; }
+  #main { max-width: 100vw; overflow-x: hidden; }
+  #credPreview { max-width: 100%; }
+  .grid-3-col-stats { grid-template-columns: 1fr 1fr; }
+}
+

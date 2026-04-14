@@ -1,0 +1,202 @@
+:root{
+  --bg:#080c14;--surface:#0e1520;--surface2:#111827;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.12);
+  --accent:#1e3a6e;--accent2:#c8382a;
+  --fitness:#f97316;--gimnasia:#6366f1;
+  --txt:#e2e8f0;--muted:#64748b;--danger:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ─── HEADER ─── */
+header{background:linear-gradient(135deg,#0e1520,#111827);border-bottom:1px solid var(--border);padding:1.1rem 2rem;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;backdrop-filter:blur(12px)}
+.logo{display:flex;align-items:center;gap:.75rem}
+.logo-txt{font-family:'Bebas Neue';font-size:1.4rem;letter-spacing:2px;color:white}
+.logo-txt span{color:var(--accent2)}
+.header-stats{display:flex;gap:1.5rem}
+.hstat{text-align:center}
+.hstat-val{font-family:'Bebas Neue';font-size:1.5rem;line-height:1}
+.hstat-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.1em}
+/* ── TABS ── */
+.tabs{display:flex;gap:.4rem;padding:1.2rem 2rem .5rem;border-bottom:1px solid var(--border)}
+.tab{padding:.55rem 1.2rem;border-radius:8px;font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;border:1px solid transparent;transition:all .2s;background:none;color:var(--muted)}
+.tab.fit{color:var(--fitness);border-color:rgba(249,115,22,.25)}
+.tab.fit.active{background:rgba(249,115,22,.12);border-color:var(--fitness)}
+.tab.gym{color:var(--gimnasia);border-color:rgba(99,102,241,.25)}
+.tab.gym.active{background:rgba(99,102,241,.12);border-color:var(--gimnasia)}
+.tab.pub{color:var(--accent2);border-color:rgba(200,56,42,.25)}
+.tab.pub.active{background:rgba(200,56,42,.1);border-color:var(--accent2)}
+.tab.imp{color:#a5b4fc;border-color:rgba(165,180,252,.2)}
+.tab.imp.active{background:rgba(165,180,252,.08);border-color:#a5b4fc}
+  
+/* ── LAYOUT ── */
+main{padding:1.5rem 2rem}
+.view{display:none}.view.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.layout-split{display:grid;grid-template-columns:1fr 300px;gap:1.5rem;align-items:start}
+
+/* ── GRILLA ── */
+.grid-wrap{overflow-x:auto}
+.horario-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+.horario-titulo{font-family:'Bebas Neue';font-size:1.8rem;letter-spacing:2px}
+.horario-titulo .hl{color:var(--fitness)}
+.horario-titulo .hlg{color:var(--gimnasia)}
+
+.grid-horario{display:grid;grid-template-columns:72px repeat(6,minmax(110px,1fr));gap:1.5px;background:var(--border);border-radius:12px;overflow:hidden;border:1px solid var(--border);min-width:700px}
+.gh-cell{background:var(--surface);padding:.5rem .4rem;font-size:.63rem;font-weight:700}
+.gh-head{background:#090d18;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;text-align:center;font-size:.58rem;padding:.6rem .4rem}
+.gh-hora{color:var(--muted);display:flex;align-items:center;justify-content:center;text-align:center;background:#090d18;font-size:.62rem;font-family:'Bebas Neue';letter-spacing:1px;font-size:.8rem}
+.clases-celda{display:flex;flex-direction:column;gap:2px;min-height:52px;cursor:pointer;transition:background .15s;border-radius:4px;padding:2px}
+.clases-celda:hover{background:rgba(255,255,255,.04)}
+.clases-celda.editando{background:rgba(99,102,241,.08);outline:1.5px solid var(--gimnasia)}
+.clases-celda.editando-fit{background:rgba(249,115,22,.08);outline:1.5px solid var(--fitness)}
+
+/* chips */
+.clase-chip{border-radius:4px;padding:2px 5px;font-size:.57rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;display:flex;align-items:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;position:relative}
+.clase-chip .del-chip{display:none;position:absolute;right:2px;top:50%;transform:translateY(-50%);font-size:.6rem;cursor:pointer;color:rgba(255,255,255,.6);background:rgba(0,0,0,.4);border-radius:3px;width:14px;height:14px;align-items:center;justify-content:center;line-height:1}
+.clase-chip:hover .del-chip{display:flex}
+.chip-add{border-radius:4px;padding:2px 5px;font-size:.57rem;font-weight:700;color:rgba(255,255,255,.25);border:1px dashed rgba(255,255,255,.12);cursor:pointer;text-align:center;transition:all .15s}
+.chip-add:hover{border-color:rgba(255,255,255,.35);color:rgba(255,255,255,.5);background:rgba(255,255,255,.04)}
+
+/* chip colors */
+.chip-yoga{background:rgba(168,85,247,.22);color:#c084fc;border:1px solid rgba(168,85,247,.3)}
+.chip-step{background:rgba(249,115,22,.18);color:#fb923c;border:1px solid rgba(249,115,22,.3)}
+.chip-dancefit{background:rgba(236,72,153,.18);color:#f472b6;border:1px solid rgba(236,72,153,.3)}
+.chip-pilates{background:rgba(20,184,166,.18);color:#2dd4bf;border:1px solid rgba(20,184,166,.3)}
+.chip-gap{background:rgba(59,130,246,.18);color:#60a5fa;border:1px solid rgba(59,130,246,.3)}
+.chip-powerjump{background:rgba(234,179,8,.18);color:#facc15;border:1px solid rgba(234,179,8,.3)}
+.chip-poledance{background:rgba(239,68,68,.18);color:#f87171;border:1px solid rgba(239,68,68,.3)}
+.chip-heeldance{background:rgba(244,114,182,.22);color:#f9a8d4;border:1px solid rgba(244,114,182,.3)}
+.chip-sculpt{background:rgba(34,197,94,.18);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.chip-babygym{background:rgba(251,191,36,.18);color:#fcd34d;border:1px solid rgba(251,191,36,.3)}
+.chip-gaf{background:rgba(99,102,241,.22);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)}
+.chip-gr{background:rgba(0,229,160,.12);color:#34d399;border:1px solid rgba(0,229,160,.3)}
+.chip-telas{background:rgba(236,72,153,.18);color:#f472b6;border:1px solid rgba(236,72,153,.3)}
+.chip-parkour{background:rgba(249,115,22,.18);color:#fb923c;border:1px solid rgba(249,115,22,.3)}
+.chip-gav{background:rgba(99,102,241,.22);color:#818cf8;border:1px solid rgba(99,102,241,.3)}
+.chip-adultgym{background:rgba(75,85,99,.28);color:#d1d5db;border:1px solid rgba(75,85,99,.4)}
+.chip-default{background:rgba(100,116,139,.18);color:#94a3b8;border:1px solid rgba(100,116,139,.3)}
+
+/* ── PANEL EDICIÓN ── */
+.sidebar-panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;position:sticky;top:76px}
+.sp-title{font-family:'Bebas Neue';font-size:1.1rem;letter-spacing:1px;margin-bottom:.8rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.5rem;color:var(--txt)}
+.sp-title .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+
+/* Panel de edición de celda */
+#editPanel{transition:all .3s}
+#editPanel.vacio p{color:var(--muted);font-size:.72rem;text-align:center;padding:1.5rem 0}
+.edit-chips{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:.8rem}
+.edit-chip{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:.65rem;font-weight:700;cursor:pointer;transition:all .15s}
+.edit-chip .x{font-size:.7rem;opacity:.6;margin-left:2px}
+.edit-chip:hover .x{opacity:1}
+
+.add-row{display:flex;gap:.4rem;margin-bottom:.6rem}
+.add-row input{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:7px;padding:.4rem .6rem;color:var(--txt);font-size:.7rem;font-family:'DM Sans',sans-serif;outline:none}
+.add-row input:focus{border-color:var(--accent2)}
+.add-row input::placeholder{color:var(--muted)}
+.add-row button{padding:.4rem .7rem;border-radius:7px;border:none;cursor:pointer;font-size:.7rem;font-weight:700;transition:all .15s}
+
+.sugerencias{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:.8rem}
+.sug-chip{font-size:.6rem;font-weight:700;padding:2px 7px;border-radius:99px;border:1px solid var(--border2);color:var(--muted);cursor:pointer;transition:all .15s;background:none}
+.sug-chip:hover{border-color:var(--accent2);color:var(--accent2)}
+
+/* cupo editor */
+.cupo-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid var(--border);margin-bottom:.8rem}
+.cupo-row label{font-size:.65rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.cupo-ctrl{display:flex;align-items:center;gap:.4rem}
+.cupo-ctrl button{width:22px;height:22px;border-radius:6px;border:1px solid var(--border2);background:rgba(255,255,255,.06);color:var(--txt);cursor:pointer;font-size:.75rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.cupo-ctrl button:hover{border-color:var(--accent2);color:var(--accent2)}
+.cupo-ctrl span{font-family:'Bebas Neue';font-size:1.3rem;min-width:28px;text-align:center}
+
+.pub-celda-btn{width:100%;padding:.55rem;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.4rem}
+
+/* ── COSTOS TABLA ── */
+.costos-tabla{width:100%;border-collapse:collapse;font-size:.68rem;margin-bottom:1rem}
+.costos-tabla th{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:.56rem;letter-spacing:.08em;padding:.35rem .4rem;text-align:left;border-bottom:1px solid var(--border)}
+.costos-tabla td{padding:.4rem .4rem;border-bottom:1px solid rgba(255,255,255,.03)}
+.costos-tabla tr:hover td{background:rgba(255,255,255,.02)}
+.precio-pronto{color:var(--accent2);font-weight:700}
+.precio-normal{color:var(--txt);font-weight:600}
+
+/* ── BOTONES ── */
+.btn{padding:.55rem 1.1rem;border-radius:8px;font-weight:700;font-size:.7rem;text-transform:uppercase;cursor:pointer;border:none;transition:all .2s;display:inline-flex;align-items:center;gap:.45rem;letter-spacing:.04em}
+.btn-primary{background:var(--accent2);color:white}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-orange{background:var(--fitness);color:white}
+.btn-orange:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-indigo{background:var(--gimnasia);color:white}
+.btn-indigo:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);padding:.4rem .8rem;border-radius:6px;font-size:.65rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-ghost:hover{border-color:var(--accent2);color:var(--accent2)}
+.btn-danger-sm{background:rgba(239,68,68,.15);color:var(--danger);border:1px solid rgba(239,68,68,.3);padding:.4rem .8rem;border-radius:6px;font-size:.65rem;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-danger-sm:hover{background:rgba(239,68,68,.25)}
+
+/* ── VISTA PUBLICAR ── */
+.pub-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.9rem;margin-top:1rem}
+.pub-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:1.1rem;transition:all .2s}
+.pub-card:hover{transform:translateY(-2px);border-color:var(--border2)}
+.pub-card.en-fb{border-color:rgba(200,56,42,.4);opacity:.65}
+.pub-nombre{font-weight:700;font-size:.78rem;text-transform:uppercase;letter-spacing:.03em}
+.pub-info{display:flex;justify-content:space-between;align-items:center;font-size:.68rem;margin:.5rem 0 .7rem}
+.pub-precio{font-family:'Bebas Neue';font-size:1.05rem;color:var(--accent2)}
+.pub-dias{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:.6rem}
+.dia-chip{font-size:.57rem;font-weight:700;padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--muted)}
+.pub-cupo-sel{display:flex;align-items:center;gap:.4rem;font-size:.68rem;color:var(--muted);margin-bottom:.6rem}
+.pub-cupo-sel select{background:rgba(0,0,0,.3);border:1px solid var(--border);color:white;border-radius:4px;padding:2px 5px;font-size:.63rem}
+.pub-btn{width:100%;padding:.5rem;border-radius:6px;font-weight:700;font-size:.63rem;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s}
+.pub-btn.publicar{background:var(--accent);color:white}.pub-btn.publicar:hover{background:#2d4f9a}
+.pub-btn.publicada{background:rgba(200,56,42,.12);color:var(--accent2);border:1px solid var(--accent2);cursor:default}
+
+/* ── CARGA MASIVA ── */
+.import-area{background:var(--surface);border:2px dashed var(--border);border-radius:12px;padding:2rem;text-align:center;cursor:pointer;transition:all .3s}
+.import-area:hover{border-color:var(--accent2);background:rgba(200,56,42,.04)}
+.import-progress{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-top:1rem}
+.prog-item{display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border);font-size:.68rem}
+.prog-ok{color:var(--accent2)}.prog-err{color:var(--danger)}.prog-pen{color:var(--muted)}
+
+/* ── MISC ── */
+.tag-count{background:rgba(99,102,241,.2);color:#a5b4fc;font-size:.58rem;font-weight:700;padding:1px 6px;border-radius:99px}
+.toast{position:fixed;bottom:24px;right:24px;background:#1e293b;color:white;padding:.75rem 1.2rem;border-radius:10px;font-size:.75rem;font-weight:700;z-index:9999;transform:translateY(80px);transition:transform .4s cubic-bezier(.34,1.56,.64,1);border-left:3px solid var(--accent2)}
+.toast.show{transform:translateY(0)}
+select,input{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* estado Firebase en grilla */
+.celda-fb{position:relative}
+.celda-fb::after{content:'✓';position:absolute;top:2px;right:3px;font-size:.5rem;color:var(--accent2);opacity:.7;font-weight:900}
+
+/* ── EDITABLE COSTS ── */
+.costo-input{background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,.2);color:var(--txt);font-size:.68rem;font-weight:600;width:76px;text-align:right;padding:1px 3px;outline:none;font-family:'DM Sans',sans-serif}
+.costo-input:focus{border-bottom-color:var(--accent2);color:white}
+.btn-save-costos{width:100%;padding:.45rem;border-radius:7px;border:1px solid rgba(200,56,42,.35);cursor:pointer;font-weight:700;font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;margin-top:.5rem;transition:all .2s;background:rgba(200,56,42,.12);color:var(--accent2);display:flex;align-items:center;justify-content:center;gap:.35rem}
+.btn-save-costos:hover{background:rgba(200,56,42,.22)}
+
+/* ── PROFESOR EN CHIP ── */
+.chip-prof{font-size:.5rem;color:rgba(255,255,255,.55);display:block;font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;font-style:italic}
+.prof-input{width:100%;background:rgba(255,255,255,.04);border:none;border-bottom:1px dashed rgba(255,255,255,.18);color:rgba(255,255,255,.75);font-size:.6rem;padding:2px 3px;outline:none;font-family:'DM Sans',sans-serif;margin-top:3px;border-radius:0}
+.prof-input:focus{border-bottom-color:var(--accent2);color:white}
+
+/* ── MOVER CLASE ── */
+.move-form{background:rgba(0,0,0,.3);border:1px solid rgba(165,180,252,.25);border-radius:8px;padding:.6rem;margin-top:.4rem}
+.move-form select{background:rgba(0,0,0,.4);border:1px solid var(--border);color:white;border-radius:5px;padding:.28rem .4rem;font-size:.62rem;font-family:'DM Sans',sans-serif;width:100%;margin-bottom:.35rem}
+.move-form label{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.15rem}
+.btn-confirmar-mover{width:100%;padding:.4rem;border-radius:6px;border:none;cursor:pointer;font-weight:700;font-size:.62rem;background:var(--accent2);color:white;transition:all .2s}
+.btn-cancelar-mover{width:100%;padding:.38rem;border-radius:6px;border:1px solid var(--border);cursor:pointer;font-weight:700;font-size:.62rem;background:none;color:var(--muted);transition:all .2s;margin-top:.25rem}
+
+/* ── DRAG & DROP ── */
+.drag-over{background:rgba(255,255,255,.08)!important;outline:2px dashed var(--accent2)!important}
+.clase-chip[draggable]{cursor:grab}
+.clase-chip.dragging{opacity:.4}
+
+/* ── EDICIÓN INLINE POR CLASE ── */
+.clase-edit-field{display:grid;grid-template-columns:1fr 1fr;gap:.25rem;margin-top:.25rem}
+.clase-edit-field label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:2px}
+.clase-edit-field input{width:100%;background:rgba(255,255,255,.04);border:none;border-bottom:1px dashed rgba(255,255,255,.18);color:rgba(255,255,255,.85);font-size:.62rem;padding:2px 3px;outline:none;font-family:'DM Sans',sans-serif;border-radius:0}
+.clase-edit-field input:focus{border-bottom-color:var(--accent2);color:white}
+.clase-cupo-row{display:flex;align-items:center;justify-content:space-between;margin-top:.25rem}
+.clase-cupo-row label{font-size:.52rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.clase-cupo-ctrl{display:flex;align-items:center;gap:.3rem}
+.clase-cupo-ctrl button{width:18px;height:18px;border-radius:5px;border:1px solid var(--border2);background:rgba(255,255,255,.06);color:var(--txt);cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.clase-cupo-ctrl button:hover{border-color:var(--accent2);color:var(--accent2)}
+.clase-cupo-ctrl .cupo-num{font-family:'Bebas Neue';font-size:1.05rem;min-width:22px;text-align:center}

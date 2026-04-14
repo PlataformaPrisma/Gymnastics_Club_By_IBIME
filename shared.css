@@ -1,0 +1,40 @@
+/*
+ * shared.css
+ * Estilos base y variables CSS comunes a todos los módulos del sistema IBIME.
+ * Se carga antes del CSS específico de cada módulo.
+ */
+
+/* ─── RESET BASE ─────────────────────────────── */
+*,*::before,*::after{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  -webkit-tap-highlight-color:transparent;
+}
+
+/* ─── SCROLLBAR GLOBAL ───────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.22)}
+
+/* ─── ANIMACIONES COMUNES ────────────────────── */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes slideInRight{
+  from{opacity:0;transform:translateX(40px)}
+  to{opacity:1;transform:translateX(0)}
+}
+@keyframes slideOutRight{
+  from{opacity:1;transform:translateX(0)}
+  to{opacity:0;transform:translateX(40px)}
+}
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+/* ─── UTILIDADES COMUNES ─────────────────────── */
+.hidden{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}

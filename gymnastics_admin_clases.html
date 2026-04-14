@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBIME — Admin de Clases</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="assets/css/shared.css">
+<link rel="stylesheet" href="assets/css/admin.css">
+
+</head>
+<body>
+
+<!-- ══ LOGIN SCREEN — ADMIN ════════════════════════════════════ -->
+<div id="login-screen-admin" style="position:fixed;inset:0;background:#0f172a;z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:#1e293b;border:1px solid #334155;border-radius:1.25rem;padding:2rem;width:100%;max-width:360px;box-shadow:0 25px 60px rgba(0,0,0,.5)">
+    <div style="text-align:center;margin-bottom:1.5rem">
+      <div style="font-size:2rem;margin-bottom:.5rem">⚙️</div>
+      <h2 style="color:#f1f5f9;font-size:1.1rem;font-weight:900;text-transform:uppercase;letter-spacing:.05em;margin:0">Admin de Clases</h2>
+      <p style="color:#94a3b8;font-size:.72rem;font-weight:600;margin:.25rem 0 0">IBIME Gymnastics Club — Acceso Administrador</p>
+    </div>
+    <div style="margin-bottom:.9rem">
+      <label style="color:#94a3b8;font-size:.65rem;font-weight:800;text-transform:uppercase;display:block;margin-bottom:.35rem">Correo</label>
+      <input id="adminEmail" type="email" placeholder="admin@prisma.com" style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:.6rem;padding:.65rem .85rem;color:#f1f5f9;font-size:.8rem;outline:none;box-sizing:border-box">
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="color:#94a3b8;font-size:.65rem;font-weight:800;text-transform:uppercase;display:block;margin-bottom:.35rem">Contraseña</label>
+      <input id="adminPassword" type="password" placeholder="••••••••" style="width:100%;background:#0f172a;border:1.5px solid #334155;border-radius:.6rem;padding:.65rem .85rem;color:#f1f5f9;font-size:.8rem;outline:none;box-sizing:border-box" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLoginAdmin()">
+    </div>
+    <button onclick="doLoginAdmin()" style="width:100%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;border:none;border-radius:.6rem;padding:.75rem;font-size:.82rem;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:.05em">
+      Iniciar Sesión
+    </button>
+    <div id="adminLoginError" style="display:none;margin-top:.75rem;color:#f87171;font-size:.7rem;font-weight:700;text-align:center;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:.5rem;padding:.5rem">
+      Credenciales incorrectas o sin permisos de administrador.
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAA2CAYAAAAMNl3OAAAYWUlEQVR42u1cd3RU1dbf+5x7p2XSKaEnJAEMhCIoPBQngC+AIAIyEZGiBANKEf0QkHYzPoqigIqo4ANpthkERUCxkJlAKEJEpUMgQEIxQEggZWbuvWd/fySRgGBB12f4VvZaszIra9bcM+d39t6/3Q5AtfxtkqYoEgCAe8a0p9Nfmv4pIAO73c7/yTVJVX3TiAgBABCR/o8eiURlj/rTz3S7AQBAHNtfQ/WVNgVEiHO56J/cP1bVAUZEqthoJwAnRZGcTicnAPzbD1KZtlGlZ7Jb0UDZ56vHLhWGSiYzOACo4pBWSyVcAQAObj0YmL3uy2Z07FgwmM0A/FqDk2azSaQo7O+yEhXvz549W4uIQg1S+b//OMhIRGzrgO4/uR/spBFRDQAA5W9Y4/8rDSYiICKkMLKW+i6PP7Zs0YFjSd2P5YxNXvfz8nfGFJw6dBcRYWePR0OHQ5RrNrtVcBGRiMg6PHXxKy17Pbf33sEvHW2WOOawbYgjbe7ytQ+Ay6X/HsjlIBIA1NROn47lBAIAjNW6+gekcMvGDicnPb36dJd25Lszlk4ktKOsJ/r9mDtn+sy8nJxYYGXYOgH4n9GWMs1VGFFBaNchL2wPaj+KeHwy8fhhxOOTSWqVTJFdRtNox7tj8Xc0MU1RJALAQx8ufWR3fH3a0tt2hogCr7cQ1XIdAAqUbyoyOJ91sF1OyqNfnY2rS+dqc7rYpiFldWlXfHrsiE/OZ2R0AWTlm22T/sim2u12zhnCQ0/NWGVpN4IM8Y97zW2SdXPrZGFukywsbZJViBuqRyeOpXlLP7qzTFOJ3fi7gAOX4LtxKRt2NTTRlv49MsvXgFgN7+8CzQigzESaLZC79I2p5x5OpJMRZv1ko0AqiK1BJ+9rR9njRi3/ueBUzI18601MKnzu3h4b3XW0zpsP1SxthglT62S69jVMNbcZTgmDJq/Am/hjIoUBAJbSpUhPYrsrO+rLtGPogE8AGTgr1l3tg3+TSQsE0J1OJ6fSElY/+ZkZ4JjxECX2uigzBld0zQenDlLYRueQ4seG7spzLlOIyIyIRE7nDTfYXf7b1339XYdCr2CMcRL0a11DQObXAS4WlLYXRBK4XPr1n0lNcDNARkdnz5kinzhuFdZAMkRFZgEJqGmzYTXAf1CSkpJ0BBBOIh7R4u51tZc72+t9B2WZDEajBEb9stB0w4/bQkxvzE89O2PKZ/lEwZiUpN8Q5LKQFc5fKjVpOqObm1FCBgJKfZoByrWxsmVw2u3c4fHopUKPKvxu62DvxXyd16qNQW1a7AQAgIQEqAb4zwINoO9etEg2I2bXn/vmg1rvgbslCSQQBGAJocsnjqvyssX/Lh75eEY++eJvCHL5vsdFN7xgMiASaQgobrBDOjHUyWrCn42y5CszKFcTIDXz8hBkmfY/O3IG7jtgJJMB/SG1Lkb3fiy9/ByJaoBvQdqNGKE6nU6OiIciXp7XrbR7310GxjmomgCzWfaTphu//Kx58chhW/J9+S2vB9mdmqoDAM587lF3WCBc0AQAB1YOBv0SjKuEmslkxtaxkZv8mg42m8IrM+fOHo+WteajvvBDxkCt+LLfYrEyrN/oU0S8oNhAcjgcAqrlLxCwtDQJAMBL1DRn9JALZ+oGiFOxNUVudE3KiQ5XzzYIoJzkQWcKiZpWIkTlzLcM8JFT5w2vlzCO4I7BuqnVE6q59TDN1HqYKrcY6mfxydS+/4QsIgotT2QgAEB53I1EVCvjkR5n0hpw3V3fqGbcE0cnN665FwDgZv6/Wm4R5Ctnj3Y+bX9Az6kboOXE1hano2tSbnSodrZRMOW+MDaHiGoRAKucFFEUhckSh5RJr01rnPiUCLgrmeRWT5LxzmSq0SmFOg+eunfD1+lNKjNvIsI0W1koljlp7Natja2UFhXk29LQJLYNs+8mIq7cxtbxHxVFIWZTFAlsigRg5wDAwWaTFEUxAQBkf7pyUn7HODrdMEDNiQmn3JgadDoyxJ/fvC4dn/bsKuDSL1Wf613V8o0ZbfqOnT2j+4iZX/x72LTlz7605AkiCrg+3aiUF2n2zJ/xxvZW9ejbRiY1rb5Z29axGR39ZGXvili8Gq0/ny/G61GRrme/XIJjU5/59nxsKOXEhGinG9ek3NhalNvAql7s2JyOLH1rYIX/vC5V8Ys5lfm1D6qsubtTUmSQJDj04XvTt9wdS+l1Zc0dHaxuizLR1hGDvkGDEZz/cImwski3h9YqDBGFLDF4f0N66227DybuO3kuAnWtoWwOkr3eknMNate4FFMnZH9iU+NG4522x6/89P1B855Ms2Y0EgodwWRm/pwTgn++9rViIs8cxLOkKAx/IUEuXVGIOdypTPU4BIAdbUoculNTdcQyeu1CZEkA6tGPlz9ZvPRNhz83W+eWIKYXFwpoeZdoOm7CJFq0CsBuB3C5qkYO4XYA1+FwiMzMzLqzP/AsPHD8fO9LRT7m1xEYB0BkgMgBicBgkKF9ZMBq15sv2LPemPFm+NJ3RxUVFOooyRwIAHWhWc2ylNe977LY1955gvr353iDxMWNrEcqIv+P0ahlrVj85OnX57wjsg8Jslg5+L26KThYsjwx+tWW45Xn6eP+HJN+/zurAb4KLm0/mN1oyisr0348XhBZ4vdCnVATRIRafgq2WHeHWM2FqqYZin3+Bid/zm/SMDSg2fD7W0R3Hfhw/sWkxCPWHTtq6EYTEQlGyIGXFuvQLI5Lc1611Wpr20JOJ8OkpJsCUq7lBFyiQyvfnulbtmjyxR/3CAq0Mq6TQL+XWYcMz7tz1sLYVMSi1LLyFFWb6D8gjnLtsY+b8+4PJwsiNU3131E/1PdIz7smTBjy0BKGqFbspIQAqiBpyeovuoC/hIciFmTPUpbJhw8+r1++rAM3MCQBwmQky4lsKFjx4VSQpETXb5hSp9PJMSlJJyLDgfmzZue/Nue5klNHNckaxEGgQN8VNNx5b0HjZyd3R8TLVOZKCKrl98VeHkOu3JhxV8t+k8nc4Sm1WZ9J2oL3P+/2i/Wx2SSbTZHAZpPguqQ+EWEJUcPjD3Tynm5gErkxtURudA3Kia1JufXM2rke91Dhib29bhavVpAwIgr76T8Tv8uIr0ueerLmbhxM7uggSotg/i22eDq+5n17VY55q2yslrd/PwIAbNi8o3V+iY8MBoNUJyxg13ODH9xkK4tBATwezeNxaODxaACgAxA6nU5OROhKQmaRpFO8fvTGAKMZgTQdAAAFARjNZDyRDRf+u6I3IF5DiEhRmALAOjsc2pnMzLYZgx5yFy175y614IJGRjMHJNBLi9WQyBi55uDk2Y37PebavShF/i0zXw3wjcRd9kdHHqURImMEyHkxAYLH4xE3NoVISUlJOiJSzTgFQddRv6PtMn9YDQDNj1BeUSDOua+omPDAD71JiBB0uXQiwjRFkdDhEC+azeLIewvGHX9hVDqkfxWvapoOskkCBNC9pWpQeC2Z93lkRdPkZ6ak2WxS25RFWlXdxiqfbWGaWsgAQFdVKin2tVZ1EQwA4vcK+u6yJD+FjRu9tSC8RgEXwAkEIRAgEKn+EhFSkF87Z9O6DqQoLBWRd3Y4NCKKzRw/4ouLb82fr+3NtKiSUQBjnJAA/F41MChElvsP/ip+4ovJqYiY4HbrVdnvVlmAa41qTgAAYVbDASNHAOBqXpE/3PHmx/0AAFJTU3/T5zkcDqEAsFCTKZ83ijkgSQwQQehC1XhJCTO0asuvdO3xVlBA2E50OEQqET+Tvn7K9v7dMko/eq97ydlcjSwmAtAYIAKpfs1oCpB5n0fdraa/PAAR9VQiqOqkqsqy6Lj9dgIAGPnEg0d2Hl4mLlwu4flXSujr7QfHENEKxCQCIAS4+Qan2mzM4fEIEVHnG9ka2N574aKwhIfJJYkJZ4yDksc0sv17DYgZ4CVqsn/mxAX+b79I9B7aB8wYoHODQQKhAzEJhN+nBpgssug9YMuds17vi4gFRGXJlypvAatqWjLVncCUOLuhZVTUkYhQOU2WZM6Erp685G3z9KxlUwBcuk35bS12pyYAAEBQh44npPCanJo2kb2Dn1wQ/s77d9fu1HUNNxjg8IoFKd/36+K5snRxYuGBQyqzBBIgcCAAYBIwv1czBQTKpqRBOzu8+lYfRCwgp5MjVpcB/zaZ9sbKnrG9XqCw+0arwfc8pbW2T9M//NLTsSJW/a1ECQDA8fWrG2VPfW5dgWdtRYgF586dbLxzzONrd3eIobS6EqVFBmjuxkHkjrKWvRoH0eb6BnVns5qUOeHpNUQUXH74qqtEf0VzqazGWvPUzKnzs5WJk4nITEQ8MeXFPSG2cRSRMM4f3Gm0SBiWmk2XL//pxnIiMh5d+vr4jJ7/yt/SOJi+rW/R0qKDhacC2CgruRsHk7ueQd0eV4OOvDJ5QxZROwCAlJRF8u22p1XrNKYmcASgEwtfmxHuWjEufNPamYfenjsYEfX+tvhJEWEmKFU1ZuAk9p4ojHxw4lsfE5HkcDhu2kFJisIqOhtLLub+a8+EFHf+grmv6N9nhmqk68wgcRQ6UkXeFjkJb5FuiKgr1R4yfO4MQ4e1QwYrWyYveH/44sUjVJtNkaoB/muhL+gMsjRrCPiDwsEYElpATicfM7T/pjZNaq80mk1cAABpfi0z60KXgc+/vspklAUisutBJqeTo8Mhkkwm/fD7S0d/nzwkrfTjDzqUnv9ZExYjIQBHuupKiTES3hKyNorhtUeNfs86cfbcrIyti3ccyjN+lvbTuy/MXZHs8Tg0m3L7gIxVbTGivO6bs+Ttx9FkUOs/lryqIhQhorCEx//zfebxvEZmWQi/CiLQYpF6tI9etfLlsYO9PpVRebKfypIWGhHVPeiYuLB4/Zo+V3JOALNYdEDiQNeRb2RClF4hKeYOXmtA8qg7np38Vn+/j0e+unLoph2Hlhw+dV5v0qAGf/TfrYdNHpn0nk1RJI/DoUG1/HW/XPTz8VYFRGEAAEvWfGVrlTRZWDuOUmt3GSNCOj2tNuw+gZ6ctvA9i8lQlkcuy03DpdzDrbcO7rc3s0k4fVtPVtOig4W7sq+9Sqj0zRES7erViY6t+WAYwLVjMLMWuYbGPzyFTHeP1FvbJ2nzlqy+v3K+vFpuAdTdKSkyEYVnjB2+eXuneNo+uP/Bk/v3NEcAmDZ/+XOxD02moHtHq7W7jKWg+0b76/cYT/axsz+hHzYFAACc2Pz1w9v73l+6tZ5MX0dZ1GsY8rUvzV1XpvRe9xVmbfz8AUCEin4rAIC2KSkyAMDMBasGxvWdSMa7n9bvGTj98tfbdseXEbyqzaqr5OLcqam83eLF6pFVK3rJ29I7l+7fW2zc9W2zvM9WDyUA9tL4x+fd06Le/MAAo+TXVM3AAX0+BMawDrRKLN3nXNn/7HzHav/Wb02a0aLLIEtA19UCEIEIdKaq3JTQLT/mlTe7xjzw4EZnf+KdPR6twi1kLl6stk1ZJE8ZM+iDbu1jRjaoE8S+zy4InLf0i0+IKNDhwCo9XFYlAT5/4AABAJiCA49J4aEgcQjA8FogBQafJEWByT16Wj54ecxzneLrfGQyWSVBkpQQX/urT9+e3nH3O+90LVj0hrN0V4ZOQYECSOcA+rV0AxFQ1zWZdG7u0Sc3/t1V3ere0XJ3mqJISS74VVUoc/EItW3bFHnB5JRFXdtHLwwNkmHn8UuxfUfPfoMhiISE1GpTfUsxMRHf9/Yr0zMH99uxc+K4WURkve4zvGfKi+u7D3ecIyLzzg8+aL6lW/vStDpMpEcF657IX5tkT+Mg8jQ0q9sbB1HmU4O+J6IGADdqwvv1egBskskgwYNPzd4QaBtLjXs9T5NffX84wNUe62q5FbFYfnmbf+xYw4L5s144s+y/95Vt/NkAz2efRRFRrW2D+pxOr2OgtMZB+o3JVDB5GhjUbTGhtPuZlAwiCvkj4F7NjBEDAMzLy6vT6Ylpl6QOI/WOAx2F2dnZkQCA/+Qk/+2ryWUtqLiobVuZiPiRscO3ljSrQYf63e89V3CuccXndkwZ9cl3TYLJ3ShQdUcF3lBz3Q2M/h3Nwmn3hNGeCmvg/JNMWCk/DPOXfzqsyUOTKDhhLA0Y//onnME/fqPObeODr+FCZcV4SMnM1ACAoclQA1QBqCPohmINACBrw4c9RHpav9KiYo0klH4174UImubXLFarbOzz2Ka2Ly/ogohFAMD279//p8p9Dkeqbrfb+aQn+y+NaxSWpguAPUdyH1q4ytXO5XLpVc1U3y7zwZSqKIiIaq3HHn/I9/QzMy0DBvStZ4k+RUSGvE/XzoLsY4QmM6IQvyJUoKqaxWSRWM8BX7Se/XqfuW8sb5361kf/Q0TgcDgE2O38jzNhJLDbwefXoF9i26kNwiz6uQKNr99yZCpDABe4qs3u32a+ATDXve7BXbYWtLlueUPcNaY5kNyRJm1bTAjtenZ4xlmiACIydHvyPz9G9p5KvUfP2f7fjz69r+KU22yK9IeBtts5ZwA9Rrz4jbXTONG874TSNRs2XDPDVK3BtwKqojBSbNLulBQZJYlOb9g4RD91ipjRCNfHuoggSNMZv6/r0Xbz3k2qh1g8Qnl74oFTV1rmX7zo27ovt8O8j7Z6Bjz/1tI9B89GejwODRHJZlOk3wPJFheHugCMaVR3eViAjPlXNNP69KP9Aa7eHlAN8K2Ya4dDQKpbb7d4sUqqGug7tL+zz1+KgIxV1m1inERpKclt/qXXe3H2I4h4+vtDh6K+O5g76XJRsW4ySAaGJHIvemnTD1lPDJ++cM8zM96bSUShHo9DK5vrtXN7eZfm9etIKO/56nZX04wgE3qL/RocP5d/L0MAj8NB1QD/FXG5GADAyXXr7sL8C+ECUJS175SJYAjg9wtDrZo8pNfDL9Vv0HQPEfFpCz5beDKvxCLLXCMCBAJmlBBB9epZ5y6GrE4/OPnewdN/GvniUuWHY3lNGLh0V3mXJoCd28pv2VMUhR040BztTifvef+9ubLEzwgAKPVRrC5IBgAdqkh267YccXSX90wX7PvhbvPlQipmXFTutOCEOoBgWos2+5qnjH1RGfGMBABglviFiFAL5BUUGVVdFwYuERBwROQGGanEd0XsPVlSP/uCL3XnvmMTez39yto720StU4Y//BVHvORxAHiuOWgAQGQEoAAQArya3/iL0lSR5OXtOcPqdgAAgjfveBMsLULg7BrHq/u8FBwZjREDhixBRJUURUJEXeI45LUVnyz+cuuRKVlnC7v/XFAEpJGQJE5AxDkyLklA3pJi/XgRmXMulA7cl5M/cNPmPT93S579TYPIGhntW0WdaBLZ4HCtYBPs+TE7fOCEN6fkXfHWRiQwG2S9MgOsCiDflld0OQF4EnI97dEH1pt2bO7pJdSxYnQFUTC/l2GHLkfvdX3ZNhWxuNJAGAMAYTJwmLNkfc9vvts7/nBOfsL5Qh8IzS8kzqiicQARiAiEKnQQgNwoGcBkksFq5CCj0CQukarq8vlCL2hCV0Hi0r+a1l79+cJJAzApCcFVNSYMb9dbdgQzm8AAeh2hCkCsdFB1IcyBNcDSqvUGRLySYLNVHggTdruTe/06Gzu4x4avF0/pPCKpQ6+2MeFf1wi2Mp1z7lc1JBAagCBEwQyMcxPjBELTSopKtLPnC8WpvCLp2JlL8qn8K0RAqlcDVjvEiF3b3jEXEYUd7NWJjr8cAiMCqpoRKvFVQgTyq6hHRECjbolbiAgTRo2ia/lZkg4Awu508lKfis8N7LPB8970xFH2e7sntGy0vmFEoGYwmiVVIPPrAjVBugChAwJwhmiQOBlkphkMkioB6qWqJtepGcDva9lo2v8M77PTbrfz8mdUjajjdk1ysAArpPfsuB+3p8epsiyAiAnGSPL5UMS3ybVt3N4EEUsrbpO9ab7C6eSupCQCAGHgCGu//SF+9aZtPXIuXEw6e/FKiyKvbvTrCKoqQAhRtmMIIHEJrEYOdcMMOe2b1hk/f+pTTtHfzquKab6tSRYBINc00ggvy+zqGeUChCRxrobVPoqyoVQB+N3pA1f5VKDd7uQuVxL1TGi1FwD2Wi2mOe9v3hHlSd/d7vylkrYXCkoa+v3+cFUTwDgrDjTJx1rE1t0+a9yQzYhYAKAwcDl0qJa/h2QBMPD0f2DtjsYB5I4K0NxRVvI0sqq7YkPJPThpHsDV3qw/I4qisBu1xiKUDZlz/LVfq4pVpNtag2vabAgeD8hBgaclLgGoKgEi6EBAkgxB9SL8t/rd5TfTCSir76IbgIEbwONxg0aeclNvB5stDiGh7MY8RKyymvu/JkVeY0FwhwkAAAAASUVORK5CYII=" alt="Logo" style="height:34px;width:auto;filter:brightness(0) invert(1)">
+    <div>
+      <div class="logo-txt">IBIME <span>ADMIN</span></div>
+      <div style="font-size:.58rem;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase">Panel de Clases</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-val" id="hTotalClases" style="color:var(--accent2)">0</div><div class="hstat-lbl">En Firebase</div></div>
+    <div class="hstat"><div class="hstat-val" id="hPendientes" style="color:var(--fitness)">0</div><div class="hstat-lbl">Por Publicar</div></div>
+    <div class="hstat"><div class="hstat-val" id="hTotalAlumnos" style="color:#a5b4fc">0</div><div class="hstat-lbl">Alumnos</div></div>
+  </div>
+  <button onclick="doLogoutAdmin()" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3);border-radius:.5rem;padding:.4rem .9rem;font-size:.68rem;font-weight:800;cursor:pointer;text-transform:uppercase;letter-spacing:.05em" title="Cerrar Sesión">⎋ Salir</button>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab fit active" onclick="switchTab('fitness',this)">🏃 Fitness</button>
+  <button class="tab gym"        onclick="switchTab('gimnasia',this)">🤸 Gimnasia</button>
+  <button class="tab pub"        onclick="switchTab('publicar',this)">🚀 Firebase</button>
+  <button class="tab imp"        onclick="switchTab('importar',this)">⚡ Carga masiva</button>
+  <button class="tab" style="color:#34d399;border-color:rgba(52,211,153,.25)" onclick="switchTab('alumno',this)">👁 Vista Alumno</button>
+  <button class="tab" style="color:#a5b4fc;border-color:rgba(165,180,252,.25)" onclick="switchTab('profesores',this)">👨‍🏫 Profesores</button>
+</div>
+
+<main>
+
+<!-- ══ FITNESS ══ -->
+<div id="view-fitness" class="view active">
+  <div class="layout-split">
+    <div>
+      <div class="horario-header">
+        <div class="horario-titulo">Horario <span class="hl">Fitness</span></div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <span style="font-size:.62rem;color:var(--muted);font-weight:600">Haz click en una celda para editar</span>
+          <button class="btn btn-orange" onclick="publicarArea('fitness')"><i class="fa-solid fa-rocket"></i> Publicar Fitness</button>
+        </div>
+      </div>
+      <div class="grid-wrap"><div class="grid-horario" id="gridFitness"></div></div>
+    </div>
+    <div class="sidebar-panel" id="panelFitness">
+      <div class="sp-title"><div class="dot" style="background:var(--fitness)"></div> Editar Celda</div>
+      <div id="editPanelFitness">
+        <p style="font-size:.7rem;color:var(--muted);text-align:center;padding:1.5rem 0;line-height:1.6">Haz click en cualquier<br>celda de la grilla para<br>editar sus disciplinas</p>
+      </div>
+      <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div class="sp-title"><div class="dot" style="background:var(--accent2)"></div> Costos Fitness</div>
+        <table class="costos-tabla">
+          <tr><th>Días/sem</th><th>Regular</th><th style="color:var(--accent2)">Pronto pago</th></tr>
+          <tr><td>1 día</td><td class="precio-normal"><input class="costo-input" id="cfr1" type="number" value="666.67" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cfp1" type="number" value="600" step="0.01" min="0"></td></tr>
+          <tr><td>2 días</td><td class="precio-normal"><input class="costo-input" id="cfr2" type="number" value="1200" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cfp2" type="number" value="1080" step="0.01" min="0"></td></tr>
+          <tr><td>3 días</td><td class="precio-normal"><input class="costo-input" id="cfr3" type="number" value="1600" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cfp3" type="number" value="1440" step="0.01" min="0"></td></tr>
+          <tr><td>4 días</td><td class="precio-normal"><input class="costo-input" id="cfr4" type="number" value="1955.56" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cfp4" type="number" value="1760" step="0.01" min="0"></td></tr>
+          <tr><td>5 días</td><td class="precio-normal"><input class="costo-input" id="cfr5" type="number" value="2222.22" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cfp5" type="number" value="2000" step="0.01" min="0"></td></tr>
+          <tr><td colspan="3" style="padding-top:.5rem"><span style="font-size:.58rem;color:var(--muted)">Inscripción única: <strong style="color:var(--txt)">$800</strong></span></td></tr>
+          <tr><td colspan="3"><button class="btn-save-costos" onclick="guardarCostos('fitness')"><i class="fa-solid fa-floppy-disk"></i> Guardar Costos Fitness</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GIMNASIA ══ -->
+<div id="view-gimnasia" class="view">
+  <div class="layout-split">
+    <div>
+      <div class="horario-header">
+        <div class="horario-titulo">Horario <span class="hlg">Gimnasia</span></div>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <span style="font-size:.62rem;color:var(--muted);font-weight:600">Haz click en una celda para editar</span>
+          <button class="btn btn-indigo" onclick="publicarArea('gimnasia')"><i class="fa-solid fa-rocket"></i> Publicar Gimnasia</button>
+        </div>
+      </div>
+      <div class="grid-wrap"><div class="grid-horario" id="gridGimnasia"></div></div>
+    </div>
+    <div class="sidebar-panel" id="panelGimnasia">
+      <div class="sp-title"><div class="dot" style="background:var(--gimnasia)"></div> Editar Celda</div>
+      <div id="editPanelGimnasia">
+        <p style="font-size:.7rem;color:var(--muted);text-align:center;padding:1.5rem 0;line-height:1.6">Haz click en cualquier<br>celda de la grilla para<br>editar sus disciplinas</p>
+      </div>
+      <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <div class="sp-title"><div class="dot" style="background:var(--accent2)"></div> Costos Gimnasia</div>
+        <table class="costos-tabla">
+          <tr><th>Días/sem</th><th>Regular</th><th style="color:var(--accent2)">Pronto pago</th></tr>
+          <tr><td>1 día</td><td class="precio-normal"><input class="costo-input" id="cgr1" type="number" value="800" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cgp1" type="number" value="720" step="0.01" min="0"></td></tr>
+          <tr><td>2 días</td><td class="precio-normal"><input class="costo-input" id="cgr2" type="number" value="1440" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cgp2" type="number" value="1296" step="0.01" min="0"></td></tr>
+          <tr><td>3 días</td><td class="precio-normal"><input class="costo-input" id="cgr3" type="number" value="1920" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cgp3" type="number" value="1728" step="0.01" min="0"></td></tr>
+          <tr><td>4 días</td><td class="precio-normal"><input class="costo-input" id="cgr4" type="number" value="2400" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cgp4" type="number" value="2160" step="0.01" min="0"></td></tr>
+          <tr><td>5 días</td><td class="precio-normal"><input class="costo-input" id="cgr5" type="number" value="2800" step="0.01" min="0"></td><td class="precio-pronto"><input class="costo-input" id="cgp5" type="number" value="2520" step="0.01" min="0"></td></tr>
+          <tr><td colspan="3" style="padding-top:.5rem"><span style="font-size:.58rem;color:var(--muted)">Inscripción única: <strong style="color:var(--txt)">$800</strong></span></td></tr>
+          <tr><td colspan="3"><button class="btn-save-costos" onclick="guardarCostos('gimnasia')"><i class="fa-solid fa-floppy-disk"></i> Guardar Costos Gimnasia</button></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PUBLICAR ══ -->
+<div id="view-publicar" class="view">
+  <div class="horario-header">
+    <div class="horario-titulo" style="font-size:1.6rem">Publicar en <span style="color:var(--accent2)">Firebase</span></div>
+    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+      <span style="font-size:.7rem;color:var(--muted)">Cupo:</span>
+      <select id="cupoPredeterminado" style="background:var(--surface);border:1px solid var(--border);color:white;padding:.4rem .6rem;border-radius:6px;font-size:.7rem;font-weight:700" onchange="renderPubGrid()">
+        <option value="10">10</option><option value="15">15</option>
+        <option value="20" selected>20</option><option value="25">25</option><option value="30">30</option>
+      </select>
+      <button onclick="publicarSeleccionadas()" class="btn btn-ghost"><i class="fa-solid fa-check-double"></i> Publicar Seleccionadas</button>
+      <button onclick="eliminarSeleccionadas()" class="btn-danger-sm"><i class="fa-solid fa-trash-can"></i> Eliminar Seleccionadas</button>
+      <button onclick="eliminarTodoFirebase()" class="btn-danger-sm"><i class="fa-solid fa-trash"></i> Eliminar TODO</button>
+      <button onclick="publicarTodo()" class="btn btn-primary"><i class="fa-solid fa-rocket"></i> Publicar TODO</button>
+    </div>
+  </div>
+  <div class="pub-grid" id="pubGrid"></div>
+</div>
+
+<!-- ══ CARGA MASIVA ══ -->
+<div id="view-importar" class="view">
+  <div class="horario-header">
+    <div class="horario-titulo" style="font-size:1.6rem">Carga <span style="color:var(--accent2)">Masiva</span></div>
+    <div style="display:flex;gap:.8rem">
+      <button onclick="importarTodas()" class="btn btn-primary"><i class="fa-solid fa-bolt"></i> Importar Todas</button>
+      <button onclick="actualizarEnFirebase()" class="btn btn-ghost"><i class="fa-solid fa-rotate"></i> Actualizar en Firebase</button>
+      <button onclick="limpiarFirebase()" class="btn-danger-sm"><i class="fa-solid fa-trash"></i> Limpiar Firebase</button>
+    </div>
+  </div>
+  <div class="import-area" onclick="importarTodas()">
+    <i class="fa-solid fa-cloud-arrow-up" style="font-size:2.5rem;color:var(--muted);margin-bottom:.8rem;display:block"></i>
+    <p style="font-weight:700;margin-bottom:.3rem">Haz click para importar todas las clases a Firebase</p>
+    <p style="font-size:.75rem;color:var(--muted)">Se crearán <strong id="totalClasesCount" style="color:var(--accent2)">0</strong> clases en la colección <code style="color:#a5b4fc">catalogo</code></p>
+  </div>
+  <div class="import-progress" id="importProgress" style="display:none">
+    <h4 style="font-family:'Bebas Neue';font-size:1.2rem;letter-spacing:1px;margin-bottom:1rem">Progreso</h4>
+    <div id="importLog" style="max-height:400px;overflow-y:auto"></div>
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:.75rem">
+      <span style="color:var(--accent2)">✅ Creadas: <strong id="logOk">0</strong></span>
+      <span style="color:var(--danger)">❌ Errores: <strong id="logErr">0</strong></span>
+      <span style="color:var(--muted)">⏳ Pendientes: <strong id="logPen">0</strong></span>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VISTA ALUMNO ══ -->
+<div id="view-alumno" class="view">
+  <div class="horario-header">
+    <div class="horario-titulo" style="font-size:1.6rem">Vista <span style="color:#34d399">Alumno</span></div>
+    <div style="display:flex;gap:.8rem;align-items:center">
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+        <button onclick="renderVistaAlumno('fitness')" id="btnVaFit" class="btn btn-orange">🏃 Fitness</button>
+        <button onclick="renderVistaAlumno('gimnasia')" id="btnVaGym" class="btn btn-indigo" style="opacity:.5">🤸 Gimnasia</button>
+        <button onclick="publicarArea('fitness')" class="btn btn-orange" style="opacity:.85;font-size:.62rem"><i class="fa-solid fa-rocket"></i> Pub Fitness</button>
+        <button onclick="publicarArea('gimnasia')" class="btn btn-indigo" style="opacity:.85;font-size:.62rem"><i class="fa-solid fa-rocket"></i> Pub Gimnasia</button>
+      </div>
+      <span style="font-size:.65rem;color:var(--muted);font-weight:600">Así ve el alumno las disciplinas y horarios disponibles</span>
+    </div>
+  </div>
+  <div id="vistaAlumnoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem"></div>
+</div>
+
+<!-- ══ PROFESORES ══ -->
+<div id="view-profesores" class="view">
+  <div class="horario-header">
+    <div class="horario-titulo" style="font-size:1.6rem">Gestión de <span style="color:#a5b4fc">Profesores</span></div>
+  </div>
+  <div class="layout-split" style="grid-template-columns:1fr 320px">
+    <!-- Columna izquierda -->
+    <div>
+      <!-- Formulario de creación -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem">
+        <div class="sp-title"><div class="dot" style="background:#a5b4fc"></div> Crear Nuevo Profesor</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem">
+          <div>
+            <label style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.25rem">Nombre completo *</label>
+            <input id="profNombre" type="text" placeholder="Ej: Juan García" oninput="emailPreviewProfesor()"
+              style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:.5rem .7rem;color:var(--txt);font-size:.75rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.25rem">Celular *</label>
+            <input id="profCelular" type="text" placeholder="Ej: 5512345678"
+              style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:.5rem .7rem;color:var(--txt);font-size:.75rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.6rem">
+          <div>
+            <label style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.25rem">Disciplina asignada</label>
+            <select id="profDisciplina"
+              style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:.5rem .7rem;color:var(--txt);font-size:.75rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+              <option value="">— Sin disciplina asignada —</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);display:block;margin-bottom:.25rem">Contraseña inicial * (mín. 6 chars)</label>
+            <div style="position:relative">
+              <input id="profPassword" type="password" placeholder="••••••••"
+                style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:.5rem 2rem .5rem .7rem;color:var(--txt);font-size:.75rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box">
+              <button onclick="this.previousElementSibling.type=this.previousElementSibling.type==='password'?'text':'password'"
+                style="position:absolute;right:.4rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);cursor:pointer;font-size:.75rem;padding:0">👁</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-bottom:.8rem;padding:.5rem .7rem;background:rgba(165,180,252,.07);border:1px solid rgba(165,180,252,.2);border-radius:7px">
+          <span style="font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)">Email que se creará: </span>
+          <span id="profEmailPreview" style="font-size:.72rem;font-weight:700;color:#a5b4fc">—</span>
+        </div>
+        <button onclick="crearProfesor()" class="btn btn-primary" style="background:rgba(165,180,252,.18);color:#a5b4fc;border:1px solid rgba(165,180,252,.35)">➕ Crear Profesor</button>
+      </div>
+
+      <!-- Lista de profesores -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.2rem">
+        <div class="sp-title" style="margin-bottom:.8rem"><div class="dot" style="background:#a5b4fc"></div> Lista de Profesores <span id="profCount" style="font-size:.6rem;font-weight:700;color:var(--muted);margin-left:.4rem"></span></div>
+        <input id="buscaProfesor" type="text" placeholder="🔍 Buscar profesor..." oninput="filtrarProfesores(this.value)"
+          style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:.45rem .7rem;color:var(--txt);font-size:.73rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;margin-bottom:.8rem">
+        <div id="listaProfesores">
+          <p style="font-size:.7rem;color:var(--muted);text-align:center;padding:1.5rem 0">Cargando profesores...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: panel de edición -->
+    <div class="sidebar-panel" style="position:sticky;top:76px">
+      <div class="sp-title"><div class="dot" style="background:#a5b4fc"></div> Editar Profesor</div>
+      <div id="profEditPanel">
+        <p style="font-size:.7rem;color:var(--muted);text-align:center;padding:1.5rem 0">Selecciona un profesor para editarlo</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- Modal confirmación contraseña admin -->
+<div id="modalConfirmAdminPwd" style="position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:none;align-items:center;justify-content:center;padding:1.5rem">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.5rem;width:100%;max-width:360px">
+    <p style="font-weight:900;font-size:.9rem;text-transform:uppercase;margin-bottom:.3rem">🔐 Confirma tu contraseña</p>
+    <p style="font-size:.7rem;color:var(--muted);margin-bottom:1rem">Para crear el usuario de acceso del profesor necesitamos re-autenticarte brevemente.</p>
+    <input id="adminPwdConfirm" type="password" placeholder="Tu contraseña de admin"
+      style="width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:7px;padding:.55rem .75rem;color:var(--txt);font-size:.8rem;font-family:'DM Sans',sans-serif;outline:none;box-sizing:border-box;margin-bottom:.75rem">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem">
+      <button onclick="confirmarCreacionProfesor()" class="btn btn-primary">Confirmar y crear</button>
+      <button onclick="cancelarCreacionProfesor()" class="btn btn-ghost">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="assets/js/firebase-init.js"></script>
+<script src="assets/js/schema.js"></script>
+<script src="assets/js/admin.js"></script>
+</body>
+</html>
+
