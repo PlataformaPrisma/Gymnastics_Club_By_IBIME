@@ -528,6 +528,12 @@ async function saveAttendance() {
       saved++;
     });
     await batch.commit();
+    
+    // ✅ NUEVA LÍNEA: Sincronizar con el módulo de sync para actualizar alumnos
+    if (typeof SyncModule !== 'undefined' && SyncModule.descontarClasesTerminadas) {
+      await SyncModule.descontarClasesTerminadas();
+    }
+    
     toast(`✅ Asistencia guardada (${saved} registros)`, 'success');
     await loadDashboardStats();
   } catch (e) {
@@ -535,7 +541,6 @@ async function saveAttendance() {
     toast('Error al guardar: ' + e.message, 'error');
   }
 }
-
 // ─── COMMENTS ─────────────────────────────────────
 function clearComments() {
   ['temas','observaciones','incidencias'].forEach(f => {
