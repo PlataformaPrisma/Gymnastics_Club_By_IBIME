@@ -330,11 +330,18 @@ function iniciarPortal(){
         }
     });
     // Primer acceso
-    if(USER.primerAcceso===true||(!USER.password)||(USER.pin&&String(USER.password||'')=== String(USER.pin||'')))setTimeout(()=>$( 'modalPass').classList.add('on'),800);
-    // Notificaciones automáticas cada 60 segundos
+        // Primer acceso (solo mostrar una vez por sesión)
+    if(!sessionStorage.getItem('ib_modalPass_shown')){
+        if(USER.primerAcceso===true||(!USER.password)||(USER.pin&&String(USER.password||'')=== String(USER.pin||''))){
+            setTimeout(()=>{
+                $('modalPass').classList.add('on');
+                sessionStorage.setItem('ib_modalPass_shown','true');
+            },800);
+        }
+    }
+   // Notificaciones automáticas cada 60 segundos
     _checkClaseInterval=setInterval(checkClaseActual,60000);
 }
-
 // ════════════════════════════════════════════════════════════════
 // NAV
 // ════════════════════════════════════════════════════════════════
@@ -1770,8 +1777,8 @@ async function guardarPrimerPass(){
         await db.collection('alumnos').doc(USER.id).update({password:p1,pin:p1,primerAcceso:false});
         USER.primerAcceso=false;
         localStorage.setItem('ib_session',JSON.stringify({id:USER.id}));
-        $( 'modalPass').classList.remove('on');
+        sessionStorage.removeItem('ib_modalPass_shown'); // Limpiar para la próxima sesión
+        $('modalPass').classList.remove('on');
         toast('✅ ¡Contraseña creada exitosamente!',4000);
     }catch(e){errMsg.textContent='Error: '+e.message;errEl.classList.add('on');}
 }
-
