@@ -932,9 +932,9 @@ async function quitarDeClase(reservaId,claseId){
         if(!confirm('¿Quitar al alumno de esta clase?'))return;
     }
     try{
-        const resultado=await SyncModule.quitarAlumnoDeClase(reservaId,claseId);
-        toast('🗑️ '+(resultado.eliminadas>1?resultado.eliminadas+' sesiones eliminadas':'Alumno removido'));
-        cargarInscritosDiscip(claseId);
+    const resultado=await SyncModule.quitarAlumnoDeClase(reservaId,claseId);
+    toast('🗑️ Alumno removido correctamente. Pases restaurados: '+resultado.pasesRestaurados);
+    cargarInscritosDiscip(claseId);
     }catch(e){toast('❌ '+e.message);}
 }
 
