@@ -439,26 +439,34 @@ function toggleCarritoPanel() {
   if (!visible) cargarCajaCatalogo();
 }
 
-function cargarCajaCatalogo() {
+async function cargarCajaCatalogo() {
   if (_unsubCajaCatalogo) { _unsubCajaCatalogo(); _unsubCajaCatalogo = null; }
+  
+  // 1. Cargar catálogo base
   _unsubCajaCatalogo = db.collection('catalogo').where('tipo','==','clase').onSnapshot(snap => {
     _cajaCatalogoCached = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    
+    // 2. Para cada clase, escuchar cambios en vivo
+    _cajaCatalogoCached.forEach(clase => {
+      rtdb.ref(`estadisticas/clases/${clase.id}`).on('value', statsSnap => {
+        const stats = statsSnap.val();
+        if (stats) {
+          // Actualizar con datos en vivo
+          const idx = _cajaCatalogoCached.findIndex(c => c.id === clase.id);
+          if (idx > -1) {
+            _cajaCatalogoCached[idx] = { ..._cajaCatalogoCached[idx], ...stats };
+            renderCajaCatalogo(); // Re-renderizar
+          }
+        }
+      });
+    });
+    
     renderCajaCatalogo();
   });
+  
   if (alumnoEnCaja && !alumnoEnCaja.inscripcionPagada) {
     $('cajaInscRow').style.display = 'block';
   }
-}
-
-let _cajaCatalogoCached = [];
-
-function filtrarCartArea(area) {
-  _cajaCartArea = area;
-  ['todo','fitness','gimnasia'].forEach(a => {
-    const btn = $('cfa-' + a);
-    if (btn) { btn.className = a === area ? 'btn btn-azul' : 'btn btn-ghost'; if (a==='fitness') btn.style.color=a===area?'':'var(--rojo)'; if(a==='gimnasia') btn.style.color=a===area?'':'var(--azul)'; }
-  });
-  renderCajaCatalogo();
 }
 
 function renderCajaCatalogo() {
