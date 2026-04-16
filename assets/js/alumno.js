@@ -1699,6 +1699,8 @@ async function cancelarClaseConfirmada(rid,cid){
     if(!confirm('¿Cancelar esta clase? Se liberará el cupo y no se puede deshacer.'))return;
     try{
         await SyncModule.quitarAlumnoDeClase(rid,cid);
+        const resultado = await SyncModule.quitarAlumnoDeClase(rid, cid);
+        toast(`✅ Clase cancelada. Pases restaurados: ${resultado.pasesRestaurados}`);
         toast('✅ Clase cancelada correctamente');
     }catch(e){toast('❌ Error al cancelar: '+(e.message||e));}
 }
