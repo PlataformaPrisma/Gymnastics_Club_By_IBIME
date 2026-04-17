@@ -180,6 +180,10 @@ async function doLogin(){
         delete USER.password;delete USER.pin;delete USER.curp;
         localStorage.setItem('ib_session',JSON.stringify({id}));
         entrarPortal();
+        // ✅ AUDITORÍA
+        if (typeof AuditModule !== 'undefined') {
+          AuditModule.auditLoginAlumno(id, 'curp_password');
+        }
     }catch(e){showLErr('login','Error: '+e.message);}
     finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-arrow-right-to-bracket" style="margin-right:6px"></i>Ingresar';}
 }
@@ -920,9 +924,16 @@ async function confirmarPlanSemanal(){
         await rtdb.ref('estatus_acceso/'+USER.id).set(orden);
         fetch(URL_GAS,{method:'POST',mode:'no-cors',body:JSON.stringify({accion:'REGISTRAR_PAGO',id:USER.id,nombre:USER.nombre,adicionales:detalle,idCarrito:folio,monto:totalMonto,metodo:'APP_PENDIENTE'})}).catch(()=>{});
 
-        // Reset
+               // Reset
         SLOTS_SEL=[];AREA_SEL=null;_slotAccordion={};
         volverPaso(1);
+        
+        // ✅ AUDITORÍA
+        if (typeof AuditModule !== 'undefined') {
+          const diasSemana = SLOTS_SEL.map(s => s.dia).join(', ');
+          AuditModule.auditAlumnoApartado(USER.id, folio, 'multiple_clases', diasSemana);
+        }
+        
         toast('✅ Reservas creadas para 5 semanas. Paga en recepción para confirmar.',5000);
         navTo('misclases');
     }catch(e){toast('❌ '+e.message,4000);}
