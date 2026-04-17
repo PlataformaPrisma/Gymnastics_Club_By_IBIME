@@ -244,8 +244,11 @@ const SetupModule = {
   // ─────────────────────────────────────────────────────────
   // 4️⃣ CONFIGURAR RTDB
   // ─────────────────────────────────────────────────────────
-  async configurarRTDB() {
+ async configurarRTDB() {
     console.log('\n⚙️ Configurando Realtime Database...\n');
+    
+    // Obtener referencia a RTDB
+    const rtdb = firebase.database();
     
     // Crear estructura base en RTDB
     console.log('  📝 Creando estructura RTDB...');
