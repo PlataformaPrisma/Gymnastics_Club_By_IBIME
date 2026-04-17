@@ -1,9 +1,17 @@
+// ════════════════════════════════════════════════════════════════
 // SETUP FIRESTORE + RTDB — Crear estructura correcta
 // ════════════════════════════════════════════════════════════════
 
-// ✅ Inicializar referencias globales
-const db = firebase.firestore();
-const rtdb = firebase.database();
+const SetupModule = {
+  
+  // ✅ Obtener referencias EN CADA MÉTODO
+  getDb() {
+    return firebase.firestore();
+  },
+  
+  getRtdb() {
+    return firebase.database();
+  },
 
 const SetupModule = {
   
