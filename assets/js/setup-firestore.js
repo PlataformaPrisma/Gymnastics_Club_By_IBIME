@@ -4,22 +4,12 @@
 
 const SetupModule = {
   
-  // ✅ Obtener referencias EN CADA MÉTODO
-  getDb() {
-    return firebase.firestore();
-  },
-  
-  getRtdb() {
-    return firebase.database();
-  },
-
-const SetupModule = {
-  
   // ─────────────────────────────────────────────────────────
   // 1️⃣ ELIMINAR COLECCIONES INCORRECTAS
   // ─────────────────────────────────────────────────────────
   async eliminarColecciones() {
     console.log('🗑️ Eliminando colecciones innecesarias...');
+    const db = firebase.firestore();
     
     const coleccionesAEliminar = [
       'temp_data',
@@ -36,7 +26,7 @@ const SetupModule = {
         snap.docs.forEach(doc => batch.delete(doc.ref));
         await batch.commit();
         
-        console.log(`  �� "${coleccion}" eliminada (${snap.size} documentos)`);
+        console.log(`  ✅ "${coleccion}" eliminada (${snap.size} documentos)`);
       } catch (e) {
         console.log(`  ℹ️ "${coleccion}" no existe (normal)`);
       }
@@ -48,8 +38,8 @@ const SetupModule = {
   // ─────────────────────────────────────────────────────────
   async crearColecciones() {
     console.log('\n📁 Creando colecciones en Firestore...\n');
+    const db = firebase.firestore();
     
-    // ── Colección: config ──────────────────────────────────
     console.log('  📝 Creando config/inscripcion...');
     await db.collection('config').doc('inscripcion').set({
       monto: 800,
@@ -103,6 +93,7 @@ const SetupModule = {
   // ─────────────────────────────────────────────────────────
   async crearTemplates() {
     console.log('\n📦 Creando documentos TEMPLATE...\n');
+    const db = firebase.firestore();
     
     console.log('  📝 Template: catalogo/TEMPLATE-CLASE-01...');
     await db.collection('catalogo').doc('TEMPLATE-CLASE-01').set({
@@ -242,11 +233,11 @@ const SetupModule = {
   // ─────────────────────────────────────────────────────────
   async configurarRTDB() {
     console.log('\n⚙️ Configurando Realtime Database...\n');
+    const rtdb = firebase.database();
     
     try {
       console.log('  📝 Creando estructura RTDB...');
       
-      // eventos
       console.log('    - Creando eventos/');
       await rtdb.ref('eventos/TEMPLATE-ALUMNO').set({
         pagos: {
@@ -268,7 +259,6 @@ const SetupModule = {
       });
       console.log('    ✅ eventos creado');
       
-      // estadisticas
       console.log('    - Creando estadisticas/');
       await rtdb.ref('estadisticas/general').set({
         fecha: new Date().toLocaleDateString('es-MX'),
@@ -279,7 +269,6 @@ const SetupModule = {
       });
       console.log('    ✅ estadisticas creado');
       
-      // notificaciones
       console.log('    - Creando notificaciones/');
       await rtdb.ref('notificaciones/TEMPLATE-ALUMNO').set({
         'notif-001': {
@@ -290,7 +279,6 @@ const SetupModule = {
       });
       console.log('    ✅ notificaciones creado');
       
-      // admins
       console.log('    - Creando admins/');
       await rtdb.ref('admins/TEMPLATE-ADMIN').set(true);
       console.log('    ✅ admins creado');
