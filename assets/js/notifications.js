@@ -17,12 +17,17 @@ const NotificationsModule = {
   // ─────────────────────────────────────────────────────────
   // 1️⃣ PAGO CONFIRMADO → Sincronizar Reservas + Notificación
   // ─────────────────────────────────────────────────────────
-  async registrarPagoProcesado(alumnoId, folio, monto, detalle) {
+ async registrarPagoProcesado(alumnoId, folio, monto, detalle, metodo = 'EFECTIVO') {
     try {
       const ahora = new Date();
       const fechaStr = ahora.toLocaleDateString('es-MX');
       
-      // 1. Crear evento en RTDB (Real-time)
+      // 0. AUDITORÍA
+      if (typeof AuditModule !== 'undefined') {
+        AuditModule.auditPagoProcesado(alumnoId, folio, monto, detalle, metodo);
+      }
+      
+      // 1. Crear evento en RTDB
       const eventoRef = rtdb.ref(`eventos/${alumnoId}/pagos/${folio}`);
       await eventoRef.set({
         folio,
@@ -90,10 +95,15 @@ const NotificationsModule = {
   // ─────────────────────────────────────────────────────────
   // 2️⃣ ASISTENCIA MARCADA → Descontar + Notificación
   // ─────────────────────────────────────────────────────────
-  async registrarAsistenciaMarcada(claseId, alumnoId, tipo) {
+ async registrarAsistenciaMarcada(claseId, alumnoId, tipo, profesorId) {
     try {
       const ahora = new Date();
       const fechaStr = ahora.toISOString().split('T')[0];
+      
+      // 0. AUDITORÍA
+      if (typeof AuditModule !== 'undefined') {
+        AuditModule.auditAsistenciaMarcada(alumnoId, claseId, tipo, profesorId);
+      }
       
       // 1. Marcar asistencia en Firestore
       await db.collection('asistencias').add({
